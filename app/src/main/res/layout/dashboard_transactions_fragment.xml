@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/dashboard_home_btn_add_transaction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:fontFamily="@font/staatliches_regular"
+        android:textColor="@android:color/white"
+        android:background="@color/colorPrimary"
+        android:gravity="center"
+        android:text="Search or filter" />
+
+    <com.msindwan.shoebox.views.dashboard.components.TransactionListView
+        android:layout_weight="1"
+        android:id="@+id/dashboard_transactions_txns_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+    />
+
+</LinearLayout>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_weight="1"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:textSize="14sp" />
+
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/date"
+        android:src="@drawable/ic_calendar" />
+
+</merge>
