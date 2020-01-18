@@ -24,4 +24,5 @@
         android:textStyle="bold"
         app:fontFamily="@font/staatliches_font_family"
     />
+
 </LinearLayout>

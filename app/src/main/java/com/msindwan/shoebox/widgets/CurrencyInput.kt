@@ -56,6 +56,7 @@ class CurrencyInput : LinearLayout {
 
     /**
      * Reads from the input and returns the amount.
+     *
      * @returns the input value in cents.
      */
     fun getAmount(): Long {
@@ -69,10 +70,15 @@ class CurrencyInput : LinearLayout {
 
     /**
      * Sets an error message for the input.
-     * @param {error} The error string to set.
+     *
+     * @param error {String} The error string to set.
      */
     fun setError(error: String) {
         editText?.error = error
+    }
+
+    fun setText(text: String) {
+        editText?.setText(text)
     }
 
     /**

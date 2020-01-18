@@ -9,12 +9,12 @@ import android.widget.LinearLayout
 import com.msindwan.shoebox.R
 
 class FooterMenu : LinearLayout {
-    enum class MenuItem {
-        HOME,
-        TRANSACTIONS,
-        ADD,
-        TRENDS,
-        SETTINGS
+    enum class MenuItem(val value: Int) {
+        HOME(0),
+        TRANSACTIONS(1),
+        ADD(2),
+        TRENDS(3),
+        SETTINGS(4)
     }
 
     var menuButtonClickHandler: ((MenuItem) -> Unit)? = null

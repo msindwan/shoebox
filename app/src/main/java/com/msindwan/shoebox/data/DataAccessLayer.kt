@@ -8,8 +8,8 @@ import com.msindwan.shoebox.data.sqlite.tables.BudgetTable
 import com.msindwan.shoebox.data.sqlite.tables.TransactionTable
 
 class DataAccessLayer private constructor(context: Context) {
-    var budgetDAO: BudgetDAO? = null
-    var transactionDAO: TransactionDAO? = null
+    var budgetDAO: BudgetDAO
+    var transactionDAO: TransactionDAO
 
     init {
         val sqliteDriver = SQLiteDatabaseHelper(context)

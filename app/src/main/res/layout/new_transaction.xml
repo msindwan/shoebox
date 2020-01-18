@@ -98,7 +98,6 @@
                     android:textSize="14sp"
                     app:fontFamily="@font/staatliches_font_family" />
 
-
                 <com.msindwan.shoebox.widgets.DateInput
                     android:id="@+id/new_transaction_txt_date"
                     android:layout_width="match_parent"
@@ -124,7 +123,7 @@
         <androidx.appcompat.widget.AppCompatAutoCompleteTextView
             android:id="@+id/new_transaction_txt_category"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:background="@drawable/input_background"
             android:hint="@string/misc"
             android:padding="8dp"

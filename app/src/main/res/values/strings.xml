@@ -5,6 +5,8 @@
     <string name="gauge_fraction_divider">/</string>
     <string name="home">Home</string>
     <string name="transactions">Transactions</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="trends">Trends</string>
     <string name="within_budget">Congratulations! You\'re within your budget.</string>
     <string name="exceeded_budget">You\'ve exceeded your budget for this month.</string>
     <string name="zero_dollars">0.00</string>
@@ -19,9 +21,24 @@
     <string name="amount">Amount</string>
     <string name="date">Date</string>
     <string name="category">Category</string>
-    <string name="add_transaction">Add Transaction</string>
+    <string name="add_transaction">Add New Transaction</string>
     <string name="cancel">Cancel</string>
     <string name="misc">Misc</string>
+    <string name="settings">Settings</string>
+    <string name="budget_for_interval">Budget for this month</string>
+    <string name="recent_transactions">Recent transactions</string>
+    <string name="no_transactions_found">No transactions found</string>
+    <string name="view_more_transactions">View more transactions</string>
+    <string name="delete_n_transactions">Delete %1$d</string>
+    <string name="apply_filters">Apply filters</string>
+    <string name="no_category_filter">No category filter</string>
+    <string name="no_start_date">No start date</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
+    <string name="no_end_date">No end date</string>
+    <string name="reset_filters">Reset filters</string>
+    <string name="search_and_filters">Search and filters</string>
+
     <string-array name="transaction_types">
         <item>Never</item>
         <item>Daily</item>

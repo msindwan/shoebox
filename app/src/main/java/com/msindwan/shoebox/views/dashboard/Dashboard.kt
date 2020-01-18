@@ -17,21 +17,26 @@
 package com.msindwan.shoebox.views.dashboard
 
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import com.msindwan.shoebox.R
-import androidx.appcompat.app.ActionBar
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
-import androidx.viewpager.widget.ViewPager
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.msindwan.shoebox.views.dashboard.components.FooterMenu
 import com.msindwan.shoebox.views.dashboard.fragments.DashboardHome
 import com.msindwan.shoebox.views.dashboard.fragments.DashboardTransactionsFragment
+import com.msindwan.shoebox.views.dashboard.fragments.DashboardTrendsFragment
+import com.msindwan.shoebox.views.dashboard.models.DashboardViewModel
+import com.msindwan.shoebox.views.settings.Settings
 import com.msindwan.shoebox.views.transactions.NewTransaction
 
 
@@ -41,24 +46,29 @@ import com.msindwan.shoebox.views.transactions.NewTransaction
 class Dashboard : AppCompatActivity() {
 
     private var dashboardFooterMenu: FooterMenu? = null
-    private var dashboardViewPager: ViewPager? = null
+    private var dashboardViewPager: ViewPager2? = null
+    private var actionBarParent: Toolbar? = null
+    private var actionBarTitle: TextView? = null
+    private lateinit var dashboardModel: DashboardViewModel
 
     /**
      * Pager adapter for dashboard fragments.
      */
-    class DashboardPagerAdapter(fragmentManager: FragmentManager): FragmentPagerAdapter(fragmentManager) {
-        override fun getCount(): Int {
-            return 2
+    private inner class DashboardPagerAdapter(
+        fragmentManager: FragmentManager,
+        lifecycle: Lifecycle
+    ) :
+        FragmentStateAdapter(fragmentManager, lifecycle) {
+        override fun getItemCount(): Int {
+            return 4
         }
 
-        override fun getItem(position: Int): Fragment {
-            when (position) {
-                0 -> return DashboardHome()
-                1 -> return DashboardTransactionsFragment()
+        override fun createFragment(position: Int): Fragment {
+            return when (position) {
+                FooterMenu.MenuItem.TRANSACTIONS.value -> DashboardTransactionsFragment()
+                FooterMenu.MenuItem.TRENDS.value -> DashboardTrendsFragment()
+                else -> DashboardHome()
             }
-
-            // @todo Add assertion or default to getItem
-            return DashboardHome()
         }
     }
 
@@ -68,51 +78,80 @@ class Dashboard : AppCompatActivity() {
         setup()
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (
+            resultCode == NewTransaction.NEW_TRANSACTION_REQUEST_CODE &&
+            requestCode == NewTransaction.NEW_TRANSACTION_RESPONSE_CODE &&
+            data != null
+        ) {
+            val model = ViewModelProviders.of(this).get(DashboardViewModel::class.java)
+
+            val date = data.getLongExtra("date", 0L)
+            val title = data.getStringExtra("title")
+            val category = data.getStringExtra("category")
+            val amount = data.getLongExtra("amount", 0L)
+
+            model.insertTransaction(date, title!!, category!!, amount)
+        }
+    }
+
     /**
      * Initializes the view.
      */
     private fun setup() {
-        this.supportActionBar!!.displayOptions = ActionBar.DISPLAY_SHOW_CUSTOM
+        supportActionBar!!.displayOptions = ActionBar.DISPLAY_SHOW_CUSTOM
         supportActionBar!!.setDisplayShowCustomEnabled(true)
         supportActionBar!!.setCustomView(R.layout.action_bar)
-        supportActionBar!!.setBackgroundDrawable(ColorDrawable(Color.WHITE))
 
-        val actionBarParent = supportActionBar?.customView?.parent as Toolbar
-        actionBarParent.setPadding(0,0,0,0)
-        actionBarParent.setContentInsetsAbsolute(0, 0)
-        actionBarParent.findViewById<TextView>(R.id.action_bar_txt_title).text = "Dashboard"
+        dashboardModel = ViewModelProviders.of(this).get(DashboardViewModel::class.java)
+        dashboardModel.getCurrentMenuItem().observe(this, Observer { onMenuButtonClickHandler(it) })
+
+        actionBarParent = supportActionBar?.customView?.parent as Toolbar
+        actionBarTitle = actionBarParent?.findViewById(R.id.action_bar_txt_title)
+
+        actionBarParent?.setPadding(0, 0, 0, 0)
+        actionBarParent?.setContentInsetsAbsolute(0, 0)
+        actionBarTitle?.text = resources.getString(R.string.dashboard)
 
         dashboardFooterMenu = findViewById(R.id.dashboard_footer_menu)
         dashboardFooterMenu?.menuButtonClickHandler = onMenuButtonClickHandler
 
-        // @todo disable pager swipe
         dashboardViewPager = findViewById(R.id.dashboard_view_pager)
-        dashboardViewPager?.adapter = DashboardPagerAdapter(supportFragmentManager)
-        dashboardViewPager?.setCurrentItem(0, false)
+        dashboardViewPager?.adapter =
+            DashboardPagerAdapter(supportFragmentManager, lifecycle)
+        dashboardViewPager?.isUserInputEnabled = false
+        dashboardViewPager?.setCurrentItem(FooterMenu.MenuItem.HOME.value, false)
     }
 
     /**
      * Handles clicking different menu buttons.
      */
-    private val onMenuButtonClickHandler = fun (menuItem: FooterMenu.MenuItem) {
-        val actionBarParent = supportActionBar?.customView?.parent as Toolbar
-
-        when(menuItem) {
+    private val onMenuButtonClickHandler = fun(menuItem: FooterMenu.MenuItem) {
+        when (menuItem) {
             FooterMenu.MenuItem.TRANSACTIONS -> {
-                actionBarParent.findViewById<TextView>(R.id.action_bar_txt_title).text = "Transactions"
-                dashboardViewPager?.setCurrentItem(1, false)
+                actionBarTitle?.text = resources.getString(R.string.transactions)
+                dashboardViewPager?.setCurrentItem(menuItem.value, false)
                 dashboardFooterMenu?.setActiveMenuItem(menuItem)
             }
             FooterMenu.MenuItem.HOME -> {
-                actionBarParent.findViewById<TextView>(R.id.action_bar_txt_title).text = "Dashboard"
-                dashboardViewPager?.setCurrentItem(0, false)
+                actionBarTitle?.text = resources.getString(R.string.dashboard)
+                dashboardViewPager?.setCurrentItem(menuItem.value, false)
                 dashboardFooterMenu?.setActiveMenuItem(menuItem)
             }
             FooterMenu.MenuItem.ADD -> {
-                startActivity(Intent(this, NewTransaction::class.java))
+                startActivityForResult(
+                    Intent(this, NewTransaction::class.java),
+                    NewTransaction.NEW_TRANSACTION_REQUEST_CODE
+                )
             }
-            else -> {
-
+            FooterMenu.MenuItem.TRENDS -> {
+                actionBarTitle?.text = resources.getString(R.string.trends)
+                dashboardViewPager?.setCurrentItem(menuItem.value, false)
+                dashboardFooterMenu?.setActiveMenuItem(menuItem)
+            }
+            FooterMenu.MenuItem.SETTINGS -> {
+                startActivity(Intent(this, Settings::class.java))
             }
         }
     }

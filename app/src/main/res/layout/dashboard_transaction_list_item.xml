@@ -42,42 +42,67 @@
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="vertical"
+        android:id="@+id/transaction_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="15dp"
-        android:paddingBottom="15dp"
-        android:paddingLeft="15dp"
-        android:paddingRight="15dp"
-        android:background="@drawable/listview_card_selector"
-        android:descendantFocusability="afterDescendants">
+        android:orientation="horizontal"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        >
 
         <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            >
+            android:id="@+id/transaction_select"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
 
-            <TextView
-                android:fontFamily="@font/staatliches_font_family"
-                android:id="@+id/transaction_list_item_title"
-                android:textSize="18sp"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-            />
-
-            <TextView
-                android:fontFamily="@font/staatliches_font_family"
-                android:textSize="18sp"
-                android:id="@+id/transaction_list_item_amount"
+            <CheckBox
+                android:id="@+id/dashboard_transaction_list_item_chk_select"
+                android:button="@drawable/custom_checkbox"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-            />
+                android:layout_height="match_parent"
+                android:layout_marginLeft="15dp"
+                android:layout_marginStart="15dp" />
 
         </LinearLayout>
 
         <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="15dp"
+            android:paddingBottom="15dp"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:descendantFocusability="afterDescendants">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                >
+
+                <TextView
+                    android:fontFamily="@font/staatliches_font_family"
+                    android:id="@+id/transaction_list_item_title"
+                    android:textSize="18sp"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                />
+
+                <TextView
+                    android:fontFamily="@font/staatliches_font_family"
+                    android:textSize="18sp"
+                    android:id="@+id/transaction_list_item_amount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                />
+
+            </LinearLayout>
+
+            <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -103,5 +128,7 @@
             />
 
         </LinearLayout>
+    </LinearLayout>
+
     </LinearLayout>
 </merge>

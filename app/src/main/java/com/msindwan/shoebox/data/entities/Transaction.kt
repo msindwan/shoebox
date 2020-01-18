@@ -6,7 +6,7 @@ data class Transaction(
     val title: String?,
     val amount: Long,
     val type: String,
-    val date_created: Int
+    val date_created: Long
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

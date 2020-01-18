@@ -72,7 +72,7 @@ class Setup : AppCompatActivity() {
             val dal: DataAccessLayer = DataAccessLayer.getInstance(applicationContext)
 
             // Create the initial monthly budget and start the dashboard.
-            dal.budgetDAO?.upsertBudget(
+            dal.budgetDAO.upsertBudget(
                 currentMonth.startDate,
                 Budget.NO_END_DATE,
                 budget,

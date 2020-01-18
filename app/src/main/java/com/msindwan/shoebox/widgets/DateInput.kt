@@ -25,8 +25,8 @@ import android.view.LayoutInflater
 import android.widget.DatePicker
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import com.msindwan.shoebox.R
 import java.util.*
 import java.text.SimpleDateFormat
@@ -37,25 +37,27 @@ import java.text.SimpleDateFormat
  */
 class DateInput : LinearLayout {
 
+    var fragmentManager: FragmentManager? = null
+
     private val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    private var date: Date = Calendar.getInstance().time
     private var textView: TextView? = null
+    private var date: Date? = Calendar.getInstance().time
 
     /**
      * Date picker dialog fragment.
      *
      * @constructor(date, handleDateSet)
-     * @param date {Date} The initial date picker date.
+     * @param date {Date} The initial date.
      * @param handleDateSet {(...) -> Unit) Callback fired when the date is set.
      */
     class DatePickerFragment(
-        private val date: Date,
+        private val date: Date?,
         private val handleDateSet: ((view: DatePicker, year: Int, month: Int, day: Int) -> Unit)
     ) : DialogFragment(), DatePickerDialog.OnDateSetListener {
 
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             val c = Calendar.getInstance()
-            c.time = date
+            c.time = date ?: Calendar.getInstance().time
 
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
@@ -78,12 +80,26 @@ class DateInput : LinearLayout {
     }
 
     /**
-     * Gets the date picker date.
+     * Getter for the input date.
      *
-     * @returns the selected date.
+     * @returns the selected date
      */
-    fun getDate(): Date {
+    fun getDate(): Date? {
         return date
+    }
+
+    /**
+     * Sets the current date for the input.
+     *
+     * @param newDate {Date} The date to set.
+     */
+    fun setDate(newDate: Date?) {
+        if (newDate == null) {
+            textView?.text = ""
+        } else {
+            textView?.text = formatter.format(newDate)
+        }
+        date = newDate
     }
 
     /**
@@ -95,7 +111,10 @@ class DateInput : LinearLayout {
         orientation = HORIZONTAL
 
         textView = getChildAt(0) as TextView
-        textView?.text = formatter.format(date)
+
+        if (date != null) {
+            textView?.text = formatter.format(date!!)
+        }
         setOnClickListener(onDateInputClicked)
     }
 
@@ -103,14 +122,15 @@ class DateInput : LinearLayout {
      * Handles opening the date picker dialog.
      */
     private val onDateInputClicked = OnClickListener {
-        val activity = context as AppCompatActivity
-        val datePickerFragment =
-            DatePickerFragment(date) { _: DatePicker, year: Int, month: Int, day: Int ->
-                val calendar = Calendar.getInstance()
-                calendar.set(year, month, day)
-                date = calendar.time
-                textView?.text = formatter.format(date)
-            }
-        datePickerFragment.show(activity.supportFragmentManager, "datePicker")
+        if (fragmentManager != null) {
+            val datePickerFragment =
+                DatePickerFragment(date) { _: DatePicker, year: Int, month: Int, day: Int ->
+                    val calendar = Calendar.getInstance()
+                    calendar.set(year, month, day)
+                    date = calendar.time
+                    textView?.text = formatter.format(calendar.time)
+                }
+            datePickerFragment.show(fragmentManager!!, "datePicker")
+        }
     }
 }

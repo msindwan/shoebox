@@ -1,6 +1,7 @@
 package com.msindwan.shoebox.data.dao
 
 import com.msindwan.shoebox.data.entities.DateRange
+import com.msindwan.shoebox.data.entities.SearchFilters
 import com.msindwan.shoebox.data.entities.Transaction
 
 interface TransactionDAO {
@@ -11,21 +12,14 @@ interface TransactionDAO {
     }
 
     fun getTransaction(transactionId: Int): Transaction
-    fun insertTransaction(date: Long, title: String, type: String, amount: Long)
+    fun insertTransaction(date: Long, title: String, type: String, amount: Long) : Transaction
     fun updateTransaction(transaction: Transaction)
-    fun deleteTransaction(transaction: Transaction)
-    fun getSumOfTransactions(dateRange: DateRange): Int
+    fun deleteTransactions(transactions: List<Transaction>)
+    fun getSumOfTransactions(dateRange: DateRange): Long
 
     fun getTransactions(
-        endDate: Long,
+        searchFilters: SearchFilters,
         lastCreatedDate: Long?,
-        order: String = ORDER_ASC,
-        limit: Int = 100
-    ): MutableList<Transaction>
-
-    fun getTransactions(
-        dateRange: DateRange,
-        lastCreatedDate: Int?,
         order: String = ORDER_ASC,
         limit: Int = 100
     ): MutableList<Transaction>
