@@ -13,8 +13,7 @@ class FooterMenu : LinearLayout {
         HOME(0),
         TRANSACTIONS(1),
         ADD(2),
-        TRENDS(3),
-        SETTINGS(4)
+        TRENDS(3)
     }
 
     var menuButtonClickHandler: ((MenuItem) -> Unit)? = null
@@ -22,7 +21,6 @@ class FooterMenu : LinearLayout {
     private var btnHome: LinearLayout? = null
     private var btnTxns: LinearLayout? = null
     private var btnTrends: LinearLayout? = null
-    private var btnSettings: LinearLayout? = null
     private var btnAdd: LinearLayout? = null
 
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
@@ -43,13 +41,11 @@ class FooterMenu : LinearLayout {
         btnHome = findViewById(R.id.dashboard_footer_menu_btn_home)
         btnTxns = findViewById(R.id.dashboard_footer_menu_btn_txns)
         btnTrends = findViewById(R.id.dashboard_footer_menu_btn_trends)
-        btnSettings = findViewById(R.id.dashboard_footer_menu_btn_settings)
         btnAdd = findViewById(R.id.dashboard_footer_menu_btn_add)
 
         btnHome?.setOnClickListener(onButtonClick(btnHome!!))
         btnTxns?.setOnClickListener(onButtonClick(btnTxns!!))
         btnTrends?.setOnClickListener(onButtonClick(btnTrends!!))
-        btnSettings?.setOnClickListener(onButtonClick(btnSettings!!))
         btnAdd?.setOnClickListener(onButtonClick(btnAdd!!))
     }
 
@@ -64,14 +60,10 @@ class FooterMenu : LinearLayout {
         val trendsImageButton = btnTrends?.getChildAt(0) as ImageView
         trendsImageButton.setBackgroundResource(R.drawable.ic_activity_inactive_icon)
 
-        val settingsImageButton = btnSettings?.getChildAt(0) as ImageView
-        settingsImageButton.setBackgroundResource(R.drawable.ic_cog_inactive_icon)
-
         when (menuItem) {
             MenuItem.HOME -> homeImageButton.setBackgroundResource(R.drawable.ic_house_icon)
             MenuItem.TRANSACTIONS -> txnsImageButton.setBackgroundResource(R.drawable.ic_transaction_icon)
             MenuItem.TRENDS -> trendsImageButton.setBackgroundResource(R.drawable.ic_activity_icon)
-            MenuItem.SETTINGS -> settingsImageButton.setBackgroundResource(R.drawable.ic_cog_icon)
             MenuItem.ADD -> {
                 // TODO: Have active "Add" state
             }
@@ -85,7 +77,6 @@ class FooterMenu : LinearLayout {
             R.id.dashboard_footer_menu_btn_home -> menuItem = MenuItem.HOME
             R.id.dashboard_footer_menu_btn_txns -> menuItem = MenuItem.TRANSACTIONS
             R.id.dashboard_footer_menu_btn_trends -> menuItem = MenuItem.TRENDS
-            R.id.dashboard_footer_menu_btn_settings -> menuItem = MenuItem.SETTINGS
             R.id.dashboard_footer_menu_btn_add -> menuItem = MenuItem.ADD
         }
 

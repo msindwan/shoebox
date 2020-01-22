@@ -28,7 +28,7 @@
         </activity>
 
         <activity
-            android:name=".views.settings.Settings"
+            android:name=".views.settings.BudgetSchedule"
             android:label="@string/app_name">
         </activity>
 

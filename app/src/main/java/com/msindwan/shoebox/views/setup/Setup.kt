@@ -24,11 +24,12 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.msindwan.shoebox.R
 import com.msindwan.shoebox.data.DataAccessLayer
-import com.msindwan.shoebox.data.entities.Budget
-import com.msindwan.shoebox.data.entities.DateRange
-import com.msindwan.shoebox.helpers.DateHelpers
+import com.msindwan.shoebox.data.entities.Currency
+import com.msindwan.shoebox.data.entities.Interval
 import com.msindwan.shoebox.views.dashboard.Dashboard
 import com.msindwan.shoebox.widgets.CurrencyInput
+import org.threeten.bp.LocalDate
+
 
 /**
  * Initial application setup activity on first install.
@@ -68,17 +69,18 @@ class Setup : AppCompatActivity() {
             setupTxtBudget?.setError(resources.getString(R.string.budget_validation))
             setupBtnNext?.isEnabled = true
         } else {
-            val currentMonth: DateRange = DateHelpers.getCurrentMonth()
+            val now: LocalDate = LocalDate.now()
             val dal: DataAccessLayer = DataAccessLayer.getInstance(applicationContext)
 
             // Create the initial monthly budget and start the dashboard.
             dal.budgetDAO.upsertBudget(
-                currentMonth.startDate,
-                Budget.NO_END_DATE,
+                now.monthValue,
+                now.year,
+                Interval.M,
                 budget,
-                "USD",
-                "M"
+                Currency.USD
             )
+
 
             val dashboard = Intent(applicationContext, Dashboard::class.java)
             startActivity(dashboard)

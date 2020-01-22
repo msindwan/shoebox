@@ -137,6 +137,7 @@ class Gauge : View {
     fun setGaugeText(remaining: String, total: String) {
         totalText.text = total
         remainingText.text = remaining
+        invalidate()
     }
 
     /**

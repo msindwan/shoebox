@@ -26,6 +26,7 @@ import android.widget.EditText
 import android.text.TextWatcher
 import android.text.Selection
 
+
 /**
  * A TextView control with formatting to ensure that a user inputs a valid monetary value.
  */
@@ -38,6 +39,15 @@ class CurrencyInput : LinearLayout {
 
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
         setup()
+    }
+
+    override fun setEnabled(enabled: Boolean) {
+        alpha = when {
+            enabled -> 1.0f
+            else -> 0.5f
+        }
+        editText?.isEnabled = enabled
+        super.setEnabled(enabled)
     }
 
     /**
@@ -77,6 +87,11 @@ class CurrencyInput : LinearLayout {
         editText?.error = error
     }
 
+    /**
+     * Sets the text for the input.
+     *
+     * @param text {String} The text to set.
+     */
     fun setText(text: String) {
         editText?.setText(text)
     }
@@ -87,7 +102,7 @@ class CurrencyInput : LinearLayout {
      * http://www.blog.nathanhaze.com/inserting-currency-in-a-edit-text-field-with-text-watcher-android/
      */
     private var currencyEditTextFormatter: TextWatcher = object : TextWatcher {
-        private val currencyRegex: Regex = "^\\$(\\d{1,3}(\\,\\d{3})*|(\\d+))(\\.\\d{2})?$".toRegex()
+        private val currencyRegex: Regex = "^\\$(\\d{1,3}(,\\d{3})*|(\\d+))(\\.\\d{2})?$".toRegex()
         private val userTextRegex: Regex = "[^\\d]".toRegex()
 
         override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) = Unit

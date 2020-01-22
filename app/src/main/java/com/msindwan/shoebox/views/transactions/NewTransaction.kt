@@ -26,6 +26,7 @@ import com.msindwan.shoebox.widgets.DateInput
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
+import com.msindwan.shoebox.helpers.ActivityHelpers
 
 
 /**
@@ -40,11 +41,6 @@ class NewTransaction : AppCompatActivity() {
 
     private var newTransactionBtnAddTxn: Button? = null
     private var newTransactionBtnCancel: Button? = null
-
-    companion object {
-        const val NEW_TRANSACTION_REQUEST_CODE = 1
-        const val NEW_TRANSACTION_RESPONSE_CODE = 1
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,7 +95,7 @@ class NewTransaction : AppCompatActivity() {
                 category = resources.getString(R.string.misc)
             }
 
-            val date: Long = newTransactionTxtDate!!.getDate()!!.time / 1000
+            val date: Long = newTransactionTxtDate!!.getDate()!!.toEpochDay()
 
             val intent = Intent()
             intent.putExtra("date", date)
@@ -107,7 +103,7 @@ class NewTransaction : AppCompatActivity() {
             intent.putExtra("category", category)
             intent.putExtra("amount", amount)
 
-            setResult(NEW_TRANSACTION_RESPONSE_CODE, intent)
+            setResult(ActivityHelpers.NEW_TRANSACTION_SUCCESS_RESPONSE_CODE, intent)
             finish()
         }
     }

@@ -18,8 +18,9 @@ package com.msindwan.shoebox.views.dashboard
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.TextView
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import com.msindwan.shoebox.R
@@ -31,13 +32,15 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.msindwan.shoebox.helpers.ActivityHelpers
 import com.msindwan.shoebox.views.dashboard.components.FooterMenu
 import com.msindwan.shoebox.views.dashboard.fragments.DashboardHome
 import com.msindwan.shoebox.views.dashboard.fragments.DashboardTransactionsFragment
 import com.msindwan.shoebox.views.dashboard.fragments.DashboardTrendsFragment
 import com.msindwan.shoebox.views.dashboard.models.DashboardViewModel
-import com.msindwan.shoebox.views.settings.Settings
+import com.msindwan.shoebox.views.settings.BudgetSchedule
 import com.msindwan.shoebox.views.transactions.NewTransaction
+import org.threeten.bp.LocalDate
 
 
 /**
@@ -78,11 +81,26 @@ class Dashboard : AppCompatActivity() {
         setup()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.action_bar_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.dashboard_menu_budget_schedule) {
+            startActivityForResult(
+                Intent(this, BudgetSchedule::class.java),
+                ActivityHelpers.BUDGET_SCHEDULE_REQUEST_CODE
+            )
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (
-            resultCode == NewTransaction.NEW_TRANSACTION_REQUEST_CODE &&
-            requestCode == NewTransaction.NEW_TRANSACTION_RESPONSE_CODE &&
+            requestCode == ActivityHelpers.NEW_TRANSACTION_REQUEST_CODE &&
+            resultCode == ActivityHelpers.NEW_TRANSACTION_SUCCESS_RESPONSE_CODE &&
             data != null
         ) {
             val model = ViewModelProviders.of(this).get(DashboardViewModel::class.java)
@@ -92,7 +110,9 @@ class Dashboard : AppCompatActivity() {
             val category = data.getStringExtra("category")
             val amount = data.getLongExtra("amount", 0L)
 
-            model.insertTransaction(date, title!!, category!!, amount)
+            model.insertTransaction(LocalDate.ofEpochDay(date), title!!, category!!, amount)
+        } else if (requestCode == ActivityHelpers.BUDGET_SCHEDULE_REQUEST_CODE) {
+            dashboardModel.updateBudget()
         }
     }
 
@@ -142,16 +162,13 @@ class Dashboard : AppCompatActivity() {
             FooterMenu.MenuItem.ADD -> {
                 startActivityForResult(
                     Intent(this, NewTransaction::class.java),
-                    NewTransaction.NEW_TRANSACTION_REQUEST_CODE
+                    ActivityHelpers.NEW_TRANSACTION_REQUEST_CODE
                 )
             }
             FooterMenu.MenuItem.TRENDS -> {
                 actionBarTitle?.text = resources.getString(R.string.trends)
                 dashboardViewPager?.setCurrentItem(menuItem.value, false)
                 dashboardFooterMenu?.setActiveMenuItem(menuItem)
-            }
-            FooterMenu.MenuItem.SETTINGS -> {
-                startActivity(Intent(this, Settings::class.java))
             }
         }
     }

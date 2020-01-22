@@ -129,23 +129,6 @@
             android:padding="8dp"
             android:textSize="14sp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/input_background"
-            android:orientation="horizontal"
-            android:padding="8dp"
-            android:visibility="gone">
-
-            <Spinner
-                android:id="@+id/spinner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:textColor="@color/colorPrimary" />
-
-        </LinearLayout>
-
         <Button
             android:id="@+id/new_transaction_btn_add_transaction"
             android:layout_width="match_parent"

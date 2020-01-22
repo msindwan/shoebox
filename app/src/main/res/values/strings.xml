@@ -29,7 +29,9 @@
     <string name="recent_transactions">Recent transactions</string>
     <string name="no_transactions_found">No transactions found</string>
     <string name="view_more_transactions">View more transactions</string>
-    <string name="delete_n_transactions">Delete %1$d</string>
+    <plurals name="delete_n_transactions">
+        <item quantity="other">Delete %d</item>
+    </plurals>
     <string name="apply_filters">Apply filters</string>
     <string name="no_category_filter">No category filter</string>
     <string name="no_start_date">No start date</string>
@@ -38,12 +40,17 @@
     <string name="no_end_date">No end date</string>
     <string name="reset_filters">Reset filters</string>
     <string name="search_and_filters">Search and filters</string>
-
-    <string-array name="transaction_types">
+    <string name="no_max_amount">%s+</string>
+    <string name="budget_schedule">Budget Schedule</string>
+    <string name="year">Year</string>
+    <string name="ok">Ok</string>
+    <plurals name="applied_filters">
+        <item quantity="one">%d filter applied</item>
+        <item quantity="other">%d filters applied</item>
+    </plurals>
+    <string-array name="repeat_budget">
         <item>Never</item>
-        <item>Daily</item>
-        <item>Weekly</item>
-        <item>Monthly</item>
-        <item>Yearly</item>
+        <item>Every Month</item>
+        <item>Every Year</item>
     </string-array>
 </resources>

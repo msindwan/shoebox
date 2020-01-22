@@ -1,25 +1,46 @@
+/**
+ * Copyright (C) 2020 Mayank Sindwani
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.msindwan.shoebox.data.sqlite.tables
 
 import android.content.ContentValues
 import com.msindwan.shoebox.data.dao.TransactionDAO
-import com.msindwan.shoebox.data.entities.DateRange
+import com.msindwan.shoebox.data.entities.Currency
+import com.msindwan.shoebox.data.entities.LocalDateRange
 import com.msindwan.shoebox.data.entities.Transaction
 import com.msindwan.shoebox.data.sqlite.SQLiteDatabaseHelper
 import com.msindwan.shoebox.helpers.UUIDHelpers
 import java.util.*
-import android.text.TextUtils
 import com.msindwan.shoebox.data.entities.SearchFilters
+import org.threeten.bp.Instant
+import org.threeten.bp.LocalDate
 
 
-class TransactionTable(var dbHelper: SQLiteDatabaseHelper) : TransactionDAO {
+/**
+ * SQLite TransactionDAO implementation.
+ */
+class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : TransactionDAO {
 
     companion object {
         private const val TABLE_NAME = "payment_transaction"
         private const val COL_TRANSACTION_ID = "transaction_id"
         private const val COL_DATE = "date"
         private const val COL_TITLE = "title"
+        private const val COL_CATEGORY = "category"
         private const val COL_AMOUNT = "amount"
-        private const val COL_TYPE = "type"
+        private const val COL_CURRENCY = "currency"
         private const val COL_DATE_CREATED = "date_created"
 
         fun createTableQuery(): String {
@@ -28,8 +49,9 @@ class TransactionTable(var dbHelper: SQLiteDatabaseHelper) : TransactionDAO {
                     $COL_TRANSACTION_ID BLOB NOT NULL PRIMARY KEY,
                     $COL_DATE INTEGER NOT NULL, 
                     $COL_TITLE TEXT,
+                    $COL_CATEGORY TEXT NOT NULL,
                     $COL_AMOUNT INTEGER NOT NULL,
-                    $COL_TYPE TEXT NOT NULL,
+                    $COL_CURRENCY TEXT NOT NULL default 'USD',
                     $COL_DATE_CREATED INTEGER NOT NULL
                 )
             """
@@ -37,30 +59,28 @@ class TransactionTable(var dbHelper: SQLiteDatabaseHelper) : TransactionDAO {
         }
     }
 
-    override fun getTransaction(transactionId: Int): Transaction {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun insertTransaction(date: Long, title: String, type: String, amount: Long) : Transaction {
+    override fun insertTransaction(
+        date: LocalDate,
+        title: String,
+        category: String,
+        amount: Long,
+        currency: Currency
+    ): Transaction {
         val db = dbHelper.writableDatabase
         val uuid = UUIDHelpers.getBytesFromUUID(UUID.randomUUID())
-        val dateCreated = Date().time
+        val dateCreated = Instant.now()
 
         val values = ContentValues()
         values.put(COL_TRANSACTION_ID, uuid)
-        values.put(COL_DATE, date)
+        values.put(COL_DATE, date.toEpochDay())
         values.put(COL_TITLE, title)
         values.put(COL_AMOUNT, amount)
-        // @todo Use enum for type
-        values.put(COL_TYPE, type)
-        values.put(COL_DATE_CREATED, dateCreated)
+        values.put(COL_CATEGORY, category)
+        values.put(COL_CURRENCY, currency.code)
+        values.put(COL_DATE_CREATED, dateCreated.toEpochMilli())
 
         db.insert(TABLE_NAME, null, values)
-        return Transaction(uuid, date, title, amount, type, dateCreated)
-    }
-
-    override fun updateTransaction(transaction: Transaction) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return Transaction(uuid, date, title, category, amount, currency, dateCreated)
     }
 
     override fun deleteTransactions(transactions: List<Transaction>) {
@@ -69,14 +89,17 @@ class TransactionTable(var dbHelper: SQLiteDatabaseHelper) : TransactionDAO {
                 transactions.joinToString(" OR ", "", "", -1, "...") { "$COL_TRANSACTION_ID = ?" }
             val db = dbHelper.writableDatabase
 
-            db.execSQL("DELETE FROM $TABLE_NAME WHERE $ids", transactions.map { t -> t.id }.toTypedArray())
+            db.execSQL(
+                "DELETE FROM $TABLE_NAME WHERE $ids",
+                transactions.map { t -> t.id }.toTypedArray()
+            )
         }
     }
 
     override fun getTransactions(
         searchFilters: SearchFilters,
-        lastCreatedDate: Long?,
-        order: String,
+        lastCreatedDate: Instant?,
+        order: TransactionDAO.Companion.Order,
         limit: Int
     ): MutableList<Transaction> {
         val db = dbHelper.writableDatabase
@@ -87,23 +110,31 @@ class TransactionTable(var dbHelper: SQLiteDatabaseHelper) : TransactionDAO {
 
         if (lastCreatedDate != null) {
             selection.add("$COL_DATE_CREATED <= ?")
-            selectionArgs.add(lastCreatedDate.toString())
+            selectionArgs.add(lastCreatedDate.toEpochMilli().toString())
         }
-        if (searchFilters.dateRange.startDate != DateRange.NO_START_DATE) {
+        if (searchFilters.dateRange.startDate != null) {
             selection.add("$COL_DATE >= ?")
-            selectionArgs.add(searchFilters.dateRange.startDate.toString())
+            selectionArgs.add(searchFilters.dateRange.startDate!!.toEpochDay().toString())
         }
-        if (searchFilters.dateRange.endDate != DateRange.NO_END_DATE) {
+        if (searchFilters.dateRange.endDate != null) {
             selection.add("$COL_DATE <= ?")
-            selectionArgs.add(searchFilters.dateRange.endDate.toString())
+            selectionArgs.add(searchFilters.dateRange.endDate!!.toEpochDay().toString())
         }
         if (searchFilters.title != null) {
             selection.add("$COL_TITLE LIKE ?")
             selectionArgs.add("%${searchFilters.title!!}%")
         }
         if (searchFilters.category != null) {
-            selection.add("$COL_TYPE LIKE ?")
+            selection.add("$COL_CATEGORY LIKE ?")
             selectionArgs.add("%${searchFilters.category!!}%")
+        }
+        if (searchFilters.maxAmount != null) {
+            selection.add("$COL_AMOUNT <= ?")
+            selectionArgs.add(searchFilters.maxAmount!!.toString())
+        }
+        if (searchFilters.minAmount != null) {
+            selection.add("$COL_AMOUNT >= ?")
+            selectionArgs.add(searchFilters.minAmount!!.toString())
         }
 
         val cTransactions = db.query(
@@ -112,15 +143,16 @@ class TransactionTable(var dbHelper: SQLiteDatabaseHelper) : TransactionDAO {
                 COL_TRANSACTION_ID,
                 COL_DATE,
                 COL_TITLE,
+                COL_CATEGORY,
                 COL_AMOUNT,
-                COL_TYPE,
+                COL_CURRENCY,
                 COL_DATE_CREATED
             ),
             selection.joinToString(" AND "),
             selectionArgs.toTypedArray(),
             null,
             null,
-            "$COL_DATE $order",
+            "$COL_DATE ${order.value}, $COL_DATE_CREATED ${order.value}",
             limit.toString()
         )
 
@@ -130,11 +162,22 @@ class TransactionTable(var dbHelper: SQLiteDatabaseHelper) : TransactionDAO {
                 transactions.add(
                     Transaction(
                         cTransactions.getBlob(cTransactions.getColumnIndex(COL_TRANSACTION_ID)),
-                        cTransactions.getLong(cTransactions.getColumnIndex(COL_DATE)),
+                        LocalDate.ofEpochDay(
+                            cTransactions.getLong(cTransactions.getColumnIndex(COL_DATE))
+                        ),
                         cTransactions.getString(cTransactions.getColumnIndex(COL_TITLE)),
+                        cTransactions.getString(cTransactions.getColumnIndex(COL_CATEGORY)),
                         cTransactions.getLong(cTransactions.getColumnIndex(COL_AMOUNT)),
-                        cTransactions.getString(cTransactions.getColumnIndex(COL_TYPE)),
-                        cTransactions.getLong(cTransactions.getColumnIndex(COL_DATE_CREATED))
+                        Currency.valueOf(
+                            cTransactions.getString(
+                                cTransactions.getColumnIndex(
+                                    COL_CURRENCY
+                                )
+                            )
+                        ),
+                        Instant.ofEpochMilli(
+                            cTransactions.getLong(cTransactions.getColumnIndex(COL_DATE_CREATED))
+                        )
                     )
                 )
             }
@@ -144,127 +187,24 @@ class TransactionTable(var dbHelper: SQLiteDatabaseHelper) : TransactionDAO {
         return transactions
     }
 
-    /*override fun getTransactions(
-        endDate: Long,
-        lastCreatedDate: Long?,
-        order: String,
-        limit: Int
-    ): MutableList<Transaction> {
-        val db = dbHelper.writableDatabase
-
-        val transactions: MutableList<Transaction> = mutableListOf()
-        val selection: String
-        val selectionArgs: Array<String>
-
-        if (lastCreatedDate != null) {
-            selection = "$COL_DATE <= ? AND $COL_DATE_CREATED <= ?"
-            selectionArgs = arrayOf(endDate.toString(), lastCreatedDate.toString())
-        } else {
-            selection = "$COL_DATE <= ?"
-            selectionArgs = arrayOf(endDate.toString())
-        }
-
-        val cTransactions = db.query(
-            TABLE_NAME,
-            arrayOf(
-                COL_TRANSACTION_ID,
-                COL_DATE,
-                COL_TITLE,
-                COL_AMOUNT,
-                COL_TYPE,
-                COL_DATE_CREATED
-            ),
-            selection,
-            selectionArgs,
-            null,
-            null,
-            "$COL_DATE $order",
-            limit.toString()
-        )
-
-        if (cTransactions != null) {
-            while (cTransactions.moveToNext()) {
-                // read
-                transactions.add(
-                    Transaction(
-                        cTransactions.getBlob(cTransactions.getColumnIndex(COL_TRANSACTION_ID)),
-                        cTransactions.getLong(cTransactions.getColumnIndex(COL_DATE)),
-                        cTransactions.getString(cTransactions.getColumnIndex(COL_TITLE)),
-                        cTransactions.getLong(cTransactions.getColumnIndex(COL_AMOUNT)),
-                        cTransactions.getString(cTransactions.getColumnIndex(COL_TYPE)),
-                        cTransactions.getLong(cTransactions.getColumnIndex(COL_DATE_CREATED))
-                    )
-                )
-            }
-        }
-
-        cTransactions?.close()
-        return transactions
-    }
-
-    override fun getTransactions(
-        lastCreatedDate: Long?,
-        order: String,
-        limit: Int
-    ): MutableList<Transaction> {
-        val db = dbHelper.writableDatabase
-
-        val transactions: MutableList<Transaction> = mutableListOf()
-        var selection: String? = null
-        var selectionArgs: Array<String>? = null
-
-        if (lastCreatedDate != null) {
-            selection = "$COL_DATE_CREATED <= ?"
-            selectionArgs = arrayOf(lastCreatedDate.toString())
-        }
-
-        val cTransactions = db.query(
-            TABLE_NAME,
-            arrayOf(
-                COL_TRANSACTION_ID,
-                COL_DATE,
-                COL_TITLE,
-                COL_AMOUNT,
-                COL_TYPE,
-                COL_DATE_CREATED
-            ),
-            selection,
-            selectionArgs,
-            null,
-            null,
-            "$COL_DATE $order",
-            limit.toString()
-        )
-
-        if (cTransactions != null) {
-            while (cTransactions.moveToNext()) {
-                // read
-                transactions.add(
-                    Transaction(
-                        cTransactions.getBlob(cTransactions.getColumnIndex(COL_TRANSACTION_ID)),
-                        cTransactions.getLong(cTransactions.getColumnIndex(COL_DATE)),
-                        cTransactions.getString(cTransactions.getColumnIndex(COL_TITLE)),
-                        cTransactions.getLong(cTransactions.getColumnIndex(COL_AMOUNT)),
-                        cTransactions.getString(cTransactions.getColumnIndex(COL_TYPE)),
-                        cTransactions.getLong(cTransactions.getColumnIndex(COL_DATE_CREATED))
-                    )
-                )
-            }
-        }
-
-        cTransactions?.close()
-        return transactions
-    }*/
-
-    override fun getSumOfTransactions(dateRange: DateRange): Long {
+    override fun getSumOfTransactions(dateRange: LocalDateRange): Long {
         val db = dbHelper.writableDatabase
         var total = 0L
+        val dateFilter = if (dateRange.startDate == null || dateRange.endDate == null) {
+            LocalDateRange.currentMonth()
+        } else {
+            dateRange
+        }
+
         val cursor = db.rawQuery(
             """
                 SELECT SUM($COL_AMOUNT) as Total FROM $TABLE_NAME WHERE $COL_DATE >= ? AND $COL_DATE <= ?
             """.trimIndent(),
-            arrayOf(dateRange.startDate.toString(), dateRange.endDate.toString())
-        );
+            arrayOf(
+                dateFilter.startDate!!.toEpochDay().toString(),
+                dateRange.endDate!!.toEpochDay().toString()
+            )
+        )
 
         if (cursor.moveToFirst()) {
             total = cursor.getLong(cursor.getColumnIndex("Total"))

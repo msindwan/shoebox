@@ -13,27 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.msindwan.shoebox.helpers
+package com.msindwan.shoebox.data.entities
 
-import java.nio.ByteBuffer
-import java.util.*
-
-
-/**
- * Utility methods for UUIDs.
- */
-object UUIDHelpers {
-
-    /**
-     * Returns a byte array from the UUID provided.
-     *
-     * @param uuid {UUID} The uuid to convert.
-     * @returns the UUID as a byte array.
-     */
-    fun getBytesFromUUID(uuid: UUID): ByteArray {
-        val bb = ByteBuffer.wrap(ByteArray(16))
-        bb.putLong(uuid.mostSignificantBits)
-        bb.putLong(uuid.leastSignificantBits)
-        return bb.array()
-    }
+enum class Interval(val value: String) {
+    // No interval
+    N("N"),
+    // Monthly interval
+    M("M"),
+    // Yearly interval
+    Y("Y")
 }

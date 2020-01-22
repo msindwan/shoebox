@@ -31,8 +31,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.msindwan.shoebox.R
 import com.msindwan.shoebox.data.entities.Transaction
+import org.threeten.bp.format.DateTimeFormatter
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -40,6 +40,10 @@ import java.util.*
  * Transaction list view component.
  */
 class TransactionListView : LinearLayout {
+
+    private val monthF = DateTimeFormatter.ofPattern("MMMM, yyyy")
+    private val sdf = DateTimeFormatter.ofPattern("MMM d, yyyy")
+
     /**
      * Transaction List Item component.
      */
@@ -54,7 +58,6 @@ class TransactionListView : LinearLayout {
         private var listItemTxtDate: TextView? = null
 
         private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
-        private val sdf = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
 
         constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
             setup()
@@ -134,10 +137,10 @@ class TransactionListView : LinearLayout {
          * @param transaction {Transaction} The transaction to display.
          */
         fun setTransaction(transaction: Transaction) {
-            listItemTxtCategory?.text = transaction.type
+            listItemTxtCategory?.text = transaction.category
             listItemTxtTitle?.text = transaction.title ?: "No Title"
-            listItemTxtAmount?.text = currencyFormatter.format(transaction.amount / 100)
-            listItemTxtDate?.text = sdf.format(Date(transaction.date * 1000))
+            listItemTxtAmount?.text = currencyFormatter.format(transaction.amount.toDouble() / 100)
+            listItemTxtDate?.text = sdf.format(transaction.date)
         }
 
         /**
@@ -166,9 +169,6 @@ class TransactionListView : LinearLayout {
         private val dayGroups: MutableMap<String, Int> = mutableMapOf()
         private val monthGroups: MutableMap<String, Int> = mutableMapOf()
 
-        private val sdf = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
-        private val monthF = SimpleDateFormat("MMMM, yyyy", Locale.getDefault())
-
         init {
             updateItemGroups()
         }
@@ -179,8 +179,8 @@ class TransactionListView : LinearLayout {
 
         override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
             val transaction = transactions[position]
-            val formattedDate = sdf.format(Date(transaction.date * 1000))
-            val formattedMonth = monthF.format(Date(transaction.date * 1000))
+            val formattedDate = sdf.format(transaction.date)
+            val formattedMonth = monthF.format(transaction.date)
 
             val view = holder.view
             if (monthGroups[formattedMonth] == position) {
@@ -213,15 +213,12 @@ class TransactionListView : LinearLayout {
         override fun getItemCount(): Int = transactions.size
 
         private fun updateItemGroups() {
-            val sdf = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
-            val monthF = SimpleDateFormat("MMMM, yyyy", Locale.getDefault())
-
             dayGroups.clear()
             monthGroups.clear()
 
             for ((index, transaction) in transactions.withIndex()) {
-                val formattedDate = sdf.format(Date(transaction.date * 1000))
-                val formattedMonth = monthF.format(Date(transaction.date * 1000))
+                val formattedDate = sdf.format(transaction.date)
+                val formattedMonth = monthF.format(transaction.date)
 
                 if (!dayGroups.contains(formattedDate)) {
                     dayGroups[formattedDate] = index
@@ -243,9 +240,12 @@ class TransactionListView : LinearLayout {
 
             editMode = selectedItems.size > 0
             actionBar?.visibility = if (selectedItems.size > 0) VISIBLE else GONE
-            deleteFab?.text = "DELETE ${selectedItems.size}"
+            deleteFab?.text = resources.getQuantityString(
+                R.plurals.delete_n_transactions,
+                selectedItems.size,
+                selectedItems.size
+            )
             deleteFab?.extend()
-                // resources.getString(R.string.delete_n_transactions, selectedItems.size)
 
             notifyDataSetChanged()
             return true

@@ -13,27 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.msindwan.shoebox.helpers
 
-import java.nio.ByteBuffer
-import java.util.*
+package com.msindwan.shoebox.helpers
 
 
 /**
- * Utility methods for UUIDs.
+ * Helpers and constants shared across activities.
  */
-object UUIDHelpers {
-
-    /**
-     * Returns a byte array from the UUID provided.
-     *
-     * @param uuid {UUID} The uuid to convert.
-     * @returns the UUID as a byte array.
-     */
-    fun getBytesFromUUID(uuid: UUID): ByteArray {
-        val bb = ByteBuffer.wrap(ByteArray(16))
-        bb.putLong(uuid.mostSignificantBits)
-        bb.putLong(uuid.leastSignificantBits)
-        return bb.array()
-    }
+object ActivityHelpers {
+    const val NEW_TRANSACTION_REQUEST_CODE = 100
+    const val NEW_TRANSACTION_SUCCESS_RESPONSE_CODE = 101
+    const val BUDGET_SCHEDULE_REQUEST_CODE = 200
+    const val BUDGET_SCHEDULE_SUCCESS_RESPONSE_CODE = 201
 }

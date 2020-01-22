@@ -27,6 +27,7 @@ import android.view.View
 import android.widget.Button
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.msindwan.shoebox.helpers.ActivityHelpers
 import com.msindwan.shoebox.views.dashboard.components.FooterMenu
 import com.msindwan.shoebox.views.dashboard.components.TransactionListView
 import com.msindwan.shoebox.views.dashboard.models.DashboardViewModel
@@ -121,7 +122,7 @@ class DashboardHome : Fragment() {
     private val onNewTransactionClicked = View.OnClickListener {
         activity?.startActivityForResult(
             Intent(activity, NewTransaction::class.java),
-            NewTransaction.NEW_TRANSACTION_REQUEST_CODE
+            ActivityHelpers.NEW_TRANSACTION_REQUEST_CODE
         )
     }
 
