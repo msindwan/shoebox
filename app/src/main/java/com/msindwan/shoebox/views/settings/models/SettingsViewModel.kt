@@ -9,6 +9,7 @@ import com.msindwan.shoebox.data.dao.BudgetDAO
 import com.msindwan.shoebox.data.entities.Budget
 import com.msindwan.shoebox.data.entities.Currency
 import com.msindwan.shoebox.data.entities.Interval
+import com.msindwan.shoebox.data.entities.LocalDateRange
 import org.threeten.bp.LocalDate
 
 class SettingsViewModel(application: Application): AndroidViewModel(application) {
@@ -50,22 +51,11 @@ class SettingsViewModel(application: Application): AndroidViewModel(application)
     }
 
     private fun loadMonthlyBudgets(): Array<Budget?> {
-        val budgets = dal.budgetDAO.getBudgetsForYear(budgetScheduleYear.value!!, BudgetDAO.Companion.Order.DATE_DESC)
-        val monthBudgets: Array<Budget?> = Array(12) { null }
-
-        for (i in 1..12) {
-            for (budget in budgets) {
-                if (
-                    (budget.month == i && budget.year == budgetScheduleYear.value!!) ||
-                    (budget.month == i && budget.interval == Interval.Y) ||
-                    ((i > budget.month || budgetScheduleYear.value!! > budget.year) && budget.interval == Interval.M)
-                ) {
-                    monthBudgets[i - 1] = budget.copy()
-                    break
-                }
-            }
-        }
-
-        return monthBudgets
+        return dal.budgetDAO.getBudgets(
+            LocalDateRange(
+                LocalDate.of(budgetScheduleYear.value!!, 1, 1),
+                LocalDate.of(budgetScheduleYear.value!!, 12, 31)
+            )
+        )
     }
 }

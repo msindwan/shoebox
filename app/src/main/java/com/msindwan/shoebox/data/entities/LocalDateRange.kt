@@ -16,17 +16,40 @@
 package com.msindwan.shoebox.data.entities
 
 import org.threeten.bp.LocalDate
+import org.threeten.bp.Period
 import org.threeten.bp.YearMonth
+
 
 data class LocalDateRange(
     val startDate: LocalDate?,
     val endDate: LocalDate?
 ) {
+    val period: Period
+        get() = Period.between(startDate, endDate)
+
     companion object {
+        /**
+         * Returns the current month.
+         *
+         * @returns the current month as a local date range.
+         */
         fun currentMonth(): LocalDateRange {
             val start = YearMonth.now().atDay(1)
             val end = YearMonth.now().atEndOfMonth()
             return LocalDateRange(start, end)
+        }
+
+        /**
+         * Returns the current year.
+         *
+         * @returns the current year as a local date range.
+         */
+        fun currentYear(): LocalDateRange {
+            val year = YearMonth.now().year
+            return LocalDateRange(
+                LocalDate.of(year, 1, 1),
+                LocalDate.of(year, 8, 1)
+            )
         }
     }
 }

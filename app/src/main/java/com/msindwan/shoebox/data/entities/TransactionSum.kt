@@ -15,30 +15,8 @@
  */
 package com.msindwan.shoebox.data.entities
 
-import org.threeten.bp.Instant
-import org.threeten.bp.LocalDate
-
-data class Transaction(
-    val id: ByteArray,
-    val date: LocalDate,
-    val title: String?,
-    val category: String?,
+data class TransactionSum(
     val amount: Long,
-    val currency: Currency,
-    val date_created: Instant
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Transaction
-
-        if (!id.contentEquals(other.id)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return id.contentHashCode()
-    }
-}
+    val year: Int,
+    val month: Int?
+)

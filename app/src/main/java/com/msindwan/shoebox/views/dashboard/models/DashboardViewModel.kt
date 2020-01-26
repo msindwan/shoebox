@@ -3,9 +3,11 @@ package com.msindwan.shoebox.views.dashboard.models
 import android.app.Application
 import androidx.lifecycle.*
 import com.msindwan.shoebox.data.DataAccessLayer
+import com.msindwan.shoebox.data.dao.BudgetDAO
 import com.msindwan.shoebox.data.dao.TransactionDAO
 import com.msindwan.shoebox.data.entities.*
 import com.msindwan.shoebox.views.dashboard.components.FooterMenu
+import com.msindwan.shoebox.widgets.BudgetGraph
 import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
 
@@ -32,9 +34,17 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val currentMenuItem: MutableLiveData<FooterMenu.MenuItem> =
         MutableLiveData(FooterMenu.MenuItem.HOME)
 
+    private val budgetGraph: MutableLiveData<List<BudgetGraph.Point>> by lazy {
+        MutableLiveData(loadBudgetGraph())
+    }
+
+    private var trendsDateRange: MutableLiveData<LocalDateRange> =
+        MutableLiveData(LocalDateRange.currentYear())
+
     private var selectedDateRange: LocalDateRange = LocalDateRange.currentMonth()
     private var searchLastCreatedDate: Instant? = null
-    private var searchOrder:  TransactionDAO.Companion.Order = TransactionDAO.Companion.Order.DATE_DESC
+    private var searchOrder: TransactionDAO.Companion.Order =
+        TransactionDAO.Companion.Order.DATE_DESC
 
     private var searchFilters: SearchFilters =
         SearchFilters(null, LocalDateRange(null, null), null, null, null)
@@ -64,6 +74,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         updateRecentTransactions()
         updateSearchTransactions()
         updateSumOfTransactions()
+        updateTrends()
     }
 
     fun deleteTransactions(transactions: List<Transaction>) {
@@ -72,6 +83,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         // @todo find a way to retain pagination
         updateSearchTransactions()
         updateSumOfTransactions()
+        updateTrends()
     }
 
     fun nextSearchTransactions(limit: Int): Int {
@@ -159,15 +171,82 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         sumOfTransactions.value = loadSumOfTransactions()
     }
 
+    private fun updateTrends() {
+        budgetGraph.value = loadBudgetGraph()
+    }
+
     private fun loadBudget(): Budget? {
-        // @todo: don't hard-code this
-        return dal.budgetDAO.getBudgetForMonth(
-            1,
-            2020
-        )
+        return dal.budgetDAO.getBudgets(selectedDateRange).getOrNull(0)
     }
 
     private fun loadSumOfTransactions(): Long {
-        return dal.transactionDAO.getSumOfTransactions(selectedDateRange)
+        val sums = dal.transactionDAO.getSumOfTransactions(selectedDateRange)
+        if (sums.isNotEmpty()) {
+            return sums[0].amount
+        }
+        return 0
+    }
+
+    private fun loadBudgetGraph(): List<BudgetGraph.Point> {
+        val groupTxnSumsBy: TransactionDAO.Companion.GroupTransactionSums
+        val groupBudgetsBy: BudgetDAO.Companion.GroupBudgets
+
+        if (trendsDateRange.value!!.period.years > 1) {
+            groupTxnSumsBy = TransactionDAO.Companion.GroupTransactionSums.YEAR
+            groupBudgetsBy = BudgetDAO.Companion.GroupBudgets.YEAR
+        } else {
+            groupTxnSumsBy = TransactionDAO.Companion.GroupTransactionSums.MONTH
+            groupBudgetsBy = BudgetDAO.Companion.GroupBudgets.MONTH
+        }
+
+        val budgets = dal.budgetDAO.getBudgets(trendsDateRange.value!!, groupBudgetsBy)
+        val transactions =
+            dal.transactionDAO.getSumOfTransactions(trendsDateRange.value!!, groupTxnSumsBy)
+
+        val points = mutableListOf<BudgetGraph.Point>()
+
+        for ((i, budget) in budgets.withIndex()) {
+            val x: Long = budget?.amount ?: 0
+            var y: Long = 0
+            val labels: MutableList<String> = mutableListOf()
+
+            for (transaction in transactions) {
+                if (
+                    groupTxnSumsBy == TransactionDAO.Companion.GroupTransactionSums.MONTH &&
+                    transaction.month == trendsDateRange.value!!.startDate!!.monthValue + i
+                ) {
+                    y = transaction.amount
+                } else if (
+                    groupTxnSumsBy == TransactionDAO.Companion.GroupTransactionSums.YEAR &&
+                    transaction.year == trendsDateRange.value!!.startDate!!.year + i
+                ) {
+                    y = transaction.amount
+                }
+            }
+
+            if (groupTxnSumsBy == TransactionDAO.Companion.GroupTransactionSums.MONTH) {
+                labels.add((trendsDateRange.value!!.startDate!!.monthValue + i).toString())
+                labels.add((trendsDateRange.value!!.startDate!!.year).toString())
+            } else {
+                labels.add((trendsDateRange.value!!.startDate!!.year + i).toString())
+            }
+
+            points.add(BudgetGraph.Point(x, y, labels))
+        }
+
+        return points
+    }
+
+    fun getBudgetGraph(): LiveData<List<BudgetGraph.Point>> {
+        return budgetGraph
+    }
+
+    fun getTrendsDateRange(): LiveData<LocalDateRange> {
+        return trendsDateRange
+    }
+
+    fun setTrendsDateRange(dateRange: LocalDateRange) {
+        trendsDateRange.value = dateRange
+        updateTrends()
     }
 }

@@ -23,9 +23,10 @@ import com.jakewharton.threetenabp.AndroidThreeTen
 import com.msindwan.shoebox.R
 import com.msindwan.shoebox.data.DataAccessLayer
 import com.msindwan.shoebox.data.entities.Budget
+import com.msindwan.shoebox.data.entities.LocalDateRange
 import com.msindwan.shoebox.views.dashboard.Dashboard
 import com.msindwan.shoebox.views.setup.Setup
-import org.threeten.bp.LocalDate
+
 
 /**
  * App view router.
@@ -39,14 +40,11 @@ class AppIndex : AppCompatActivity() {
         setContentView(R.layout.app_index)
 
         val dal: DataAccessLayer = DataAccessLayer.getInstance(applicationContext)
-        val now: LocalDate = LocalDate.now()
-        val budget: Budget? = dal.budgetDAO.getBudgetForMonth(
-            now.dayOfMonth,
-            now.year
-        )
+        val budgets: List<Budget> =
+            dal.budgetDAO.getBudgets(LocalDateRange.currentMonth()).filterNotNull()
 
         // Skip setup if a budget already exists.
-        val nextView: Intent = if (budget != null) {
+        val nextView: Intent = if (budgets.isNotEmpty()) {
             Intent(applicationContext, Dashboard::class.java)
         } else {
             Intent(applicationContext, Setup::class.java)

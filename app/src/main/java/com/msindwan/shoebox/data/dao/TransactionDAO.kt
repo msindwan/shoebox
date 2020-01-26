@@ -15,10 +15,7 @@
  */
 package com.msindwan.shoebox.data.dao
 
-import com.msindwan.shoebox.data.entities.Currency
-import com.msindwan.shoebox.data.entities.LocalDateRange
-import com.msindwan.shoebox.data.entities.SearchFilters
-import com.msindwan.shoebox.data.entities.Transaction
+import com.msindwan.shoebox.data.entities.*
 import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
 
@@ -32,6 +29,11 @@ interface TransactionDAO {
         enum class Order(val value: String) {
             DATE_ASC("ASC"),
             DATE_DESC("DESC")
+        }
+
+        enum class GroupTransactionSums {
+            YEAR,
+            MONTH
         }
     }
 
@@ -65,7 +67,10 @@ interface TransactionDAO {
      * @param dateRange {LocalDateRange} The date range to sum transactions for.
      * @returns {Long} The sum of all transactions found.
      */
-    fun getSumOfTransactions(dateRange: LocalDateRange): Long
+    fun getSumOfTransactions(
+        dateRange: LocalDateRange,
+        groupBy: GroupTransactionSums = GroupTransactionSums.MONTH
+    ): List<TransactionSum>
 
     /**
      * Returns the transactions for the given search constraints.

@@ -18,35 +18,20 @@ package com.msindwan.shoebox.data.dao
 import com.msindwan.shoebox.data.entities.Budget
 import com.msindwan.shoebox.data.entities.Currency
 import com.msindwan.shoebox.data.entities.Interval
+import com.msindwan.shoebox.data.entities.LocalDateRange
 
 
 /**
  * Budget Data Access Object.
  */
 interface BudgetDAO {
+
     companion object {
-        enum class Order(val value: String) {
-            DATE_ASC("ASC"),
-            DATE_DESC("DESC")
+        enum class GroupBudgets {
+            YEAR,
+            MONTH
         }
     }
-
-    /**
-     * Returns the budget for the given month.
-     *
-     * @param month {Int} Integer from 1 - 12 representing the month.
-     * @param year {Int} The year.
-     * @returns The budget for the month if found.
-     */
-    fun getBudgetForMonth(month: Int, year: Int): Budget?
-
-    /**
-     * Returns budgets applicable for the given year.
-     *
-     * @param year {Int} The year.
-     * @returns The budgets that fall within the year provided.
-     */
-    fun getBudgetsForYear(year: Int, order: Order = Order.DATE_ASC): List<Budget>
 
     /**
      * Updates or inserts a budget.
@@ -58,4 +43,15 @@ interface BudgetDAO {
      * @param interval {Interval} The interval that the budget repeats for.
      */
     fun upsertBudget(month: Int, year: Int, interval: Interval, amount: Long, currency: Currency)
+
+    /**
+     * Returns the budgets applicable for the given date range.
+     *
+     * @param dateRange {LocalDateRange} The date range to find budgets for.
+     * @param groupBy {GroupBudgets} The way to group budgets together.
+     */
+    fun getBudgets(
+        dateRange: LocalDateRange,
+        groupBy: GroupBudgets = GroupBudgets.MONTH
+    ): Array<Budget?>
 }

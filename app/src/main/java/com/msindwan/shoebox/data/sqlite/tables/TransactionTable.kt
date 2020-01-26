@@ -17,13 +17,11 @@ package com.msindwan.shoebox.data.sqlite.tables
 
 import android.content.ContentValues
 import com.msindwan.shoebox.data.dao.TransactionDAO
+import com.msindwan.shoebox.data.entities.*
 import com.msindwan.shoebox.data.entities.Currency
-import com.msindwan.shoebox.data.entities.LocalDateRange
-import com.msindwan.shoebox.data.entities.Transaction
 import com.msindwan.shoebox.data.sqlite.SQLiteDatabaseHelper
 import com.msindwan.shoebox.helpers.UUIDHelpers
 import java.util.*
-import com.msindwan.shoebox.data.entities.SearchFilters
 import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
 
@@ -187,18 +185,38 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
         return transactions
     }
 
-    override fun getSumOfTransactions(dateRange: LocalDateRange): Long {
+    override fun getSumOfTransactions(
+        dateRange: LocalDateRange,
+        groupBy: TransactionDAO.Companion.GroupTransactionSums
+    ): List<TransactionSum> {
         val db = dbHelper.writableDatabase
-        var total = 0L
+        val totals = mutableListOf<TransactionSum>()
+
         val dateFilter = if (dateRange.startDate == null || dateRange.endDate == null) {
             LocalDateRange.currentMonth()
         } else {
             dateRange
         }
 
+        val groupByClause = if (groupBy == TransactionDAO.Companion.GroupTransactionSums.MONTH) {
+            "GROUP BY Year, Month"
+        } else {
+            "GROUP BY Year"
+        }
+
         val cursor = db.rawQuery(
             """
-                SELECT SUM($COL_AMOUNT) as Total FROM $TABLE_NAME WHERE $COL_DATE >= ? AND $COL_DATE <= ?
+                SELECT
+                    SUM($COL_AMOUNT) as Total,
+                    strftime('%Y', datetime($COL_DATE * 86400, 'unixepoch', 'localtime')) as Year,
+                    strftime('%m', datetime($COL_DATE * 86400, 'unixepoch', 'localtime')) as Month
+                FROM
+                    $TABLE_NAME
+                WHERE 
+                    $COL_DATE >= ? AND $COL_DATE <= ?
+                $groupByClause
+                ORDER BY
+                    $COL_DATE ASC
             """.trimIndent(),
             arrayOf(
                 dateFilter.startDate!!.toEpochDay().toString(),
@@ -206,11 +224,17 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
             )
         )
 
-        if (cursor.moveToFirst()) {
-            total = cursor.getLong(cursor.getColumnIndex("Total"))
+        while (cursor.moveToNext()) {
+            totals.add(
+                TransactionSum(
+                    cursor.getLong(cursor.getColumnIndex("Total")),
+                    cursor.getInt(cursor.getColumnIndex("Year")),
+                    cursor.getInt(cursor.getColumnIndex("Month"))
+                )
+            )
         }
 
         cursor?.close()
-        return total
+        return totals
     }
 }
