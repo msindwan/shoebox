@@ -19,13 +19,15 @@ import org.threeten.bp.LocalDate
 import org.threeten.bp.Period
 import org.threeten.bp.YearMonth
 
-
 data class LocalDateRange(
     val startDate: LocalDate?,
     val endDate: LocalDate?
 ) {
     val period: Period
-        get() = Period.between(startDate, endDate)
+        get() = Period.between(startDate, endDate?.plusDays(1))
+
+    val months: Int
+        get() = (period.years * 12 + period.months + period.days.coerceAtMost(1))
 
     companion object {
         /**
@@ -48,8 +50,34 @@ data class LocalDateRange(
             val year = YearMonth.now().year
             return LocalDateRange(
                 LocalDate.of(year, 1, 1),
-                LocalDate.of(year, 8, 1)
+                LocalDate.of(year, 12, 1)
             )
         }
+    }
+
+    /**
+     * Subtracts months from the end date.
+     *
+     * @param months {Long} The number of months to subtract.
+     * @returns A new date range with the updated end date.
+     */
+    fun minusEndMonths(months: Long): LocalDateRange {
+        return LocalDateRange(
+            startDate,
+            endDate?.minusMonths(months)
+        )
+    }
+
+    /**
+     * Adds years to the end date.
+     *
+     * @param years {Long} The number of years to add.
+     * @returns A new date range with the updated end date.
+     */
+    fun plusEndYears(years: Long): LocalDateRange {
+        return LocalDateRange(
+            startDate,
+            endDate?.plusYears(years)
+        )
     }
 }

@@ -83,9 +83,8 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
 
     override fun deleteTransactions(transactions: List<Transaction>) {
         if (transactions.isNotEmpty()) {
-            val ids =
-                transactions.joinToString(" OR ", "", "", -1, "...") { "$COL_TRANSACTION_ID = ?" }
             val db = dbHelper.writableDatabase
+            val ids = transactions.joinToString(" OR ") { "$COL_TRANSACTION_ID = ?" }
 
             db.execSQL(
                 "DELETE FROM $TABLE_NAME WHERE $ids",
@@ -156,7 +155,6 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
 
         if (cTransactions != null) {
             while (cTransactions.moveToNext()) {
-                // read
                 transactions.add(
                     Transaction(
                         cTransactions.getBlob(cTransactions.getColumnIndex(COL_TRANSACTION_ID)),

@@ -43,14 +43,14 @@
     <string name="no_max_amount">%s+</string>
     <string name="budget_schedule">Budget Schedule</string>
     <string name="year">Year</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
+    <string name="no_budget">No Budget</string>
+    <string name="this_month">This month</string>
+    <string name="budget">Budget</string>
+    <string name="repeat">Repeat</string>
+    <string name="update">Update</string>
     <plurals name="applied_filters">
         <item quantity="one">%d filter applied</item>
         <item quantity="other">%d filters applied</item>
     </plurals>
-    <string-array name="repeat_budget">
-        <item>Never</item>
-        <item>Every Month</item>
-        <item>Every Year</item>
-    </string-array>
 </resources>

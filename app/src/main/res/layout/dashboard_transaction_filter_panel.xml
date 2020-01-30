@@ -151,7 +151,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@drawable/input_background"
-                        android:padding="5dp" />
+                        android:padding="10dp" />
 
                     <TextView
                         android:id="@+id/dashboard_transactions_filter_no_start_date"
@@ -191,7 +191,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@drawable/input_background"
-                        android:padding="5dp" />
+                        android:padding="10dp" />
 
                     <TextView
                         android:id="@+id/dashboard_transactions_filter_no_end_date"

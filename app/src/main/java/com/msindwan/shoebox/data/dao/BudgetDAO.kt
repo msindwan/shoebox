@@ -53,5 +53,5 @@ interface BudgetDAO {
     fun getBudgets(
         dateRange: LocalDateRange,
         groupBy: GroupBudgets = GroupBudgets.MONTH
-    ): Array<Budget?>
+    ): List<Budget?>
 }

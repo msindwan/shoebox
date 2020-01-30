@@ -60,7 +60,7 @@
             android:paddingLeft="15dp"
             android:paddingRight="15dp">
 
-            <com.msindwan.shoebox.widgets.BudgetGraph
+            <com.msindwan.shoebox.views.dashboard.components.BudgetGraph
                 android:id="@+id/budget_graph"
                 android:layout_width="match_parent"
                 android:layout_height="350dp" />

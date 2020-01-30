@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.msindwan.shoebox.widgets
 
 import android.animation.ValueAnimator
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.*
 import android.util.AttributeSet
 import android.util.TypedValue
@@ -38,8 +38,21 @@ import android.widget.LinearLayout
 class Gauge : View {
 
     private lateinit var textContainerLayout: LinearLayout
-    private lateinit var remainingText: TextView
+    lateinit var remainingText: TextView
     private lateinit var totalText: TextView
+    private val backgroundPaint = Paint().apply {
+        color = Color.LTGRAY
+        style = Paint.Style.STROKE
+        strokeWidth = 25F
+        isAntiAlias = true
+    }
+    private var progressPaint = Paint().apply {
+        color = Color.BLUE
+        style = Paint.Style.STROKE
+        strokeWidth = 25F
+        isAntiAlias = true
+    }
+
     private var currentPercentage = 0F
     private var progress: Float = 0f
         set(value) {
@@ -47,24 +60,13 @@ class Gauge : View {
             invalidate()
         }
 
-    private val backgroundWidth = 25f
-    private val progressWidth = 25f
-    private val backgroundPaint = Paint().apply {
-        color = Color.LTGRAY
-        style = Paint.Style.STROKE
-        strokeWidth = progressWidth
-        isAntiAlias = true
-    }
-    private var progressPaint = Paint().apply {
-        color = Color.BLUE
-        style = Paint.Style.STROKE
-        strokeWidth = backgroundWidth
-        isAntiAlias = true
-    }
     private val arc = RectF()
     private var arcX: Float = 0f
     private var arcY: Float = 0f
     private var arcRadius: Float = 0f
+
+    val remainingTextColors: ColorStateList
+        get() = remainingText.textColors
 
     constructor(context: Context, attributeSet: AttributeSet?) : super(context, attributeSet) {
         setup()
@@ -77,7 +79,7 @@ class Gauge : View {
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         arcX = w.toFloat() / 2
         arcY = h.toFloat() / 2
-        arcRadius = w.toFloat() / 2 - progressWidth
+        arcRadius = w.toFloat() / 2 - progressPaint.strokeWidth
         arc.set(
             arcX - arcRadius,
             arcY - arcRadius,
@@ -146,12 +148,28 @@ class Gauge : View {
      * @param c {Int} The color to set.
      */
     fun setProgressBarColor(c: Int) {
-        progressPaint = Paint().apply {
-            color = c
-            style = Paint.Style.STROKE
-            strokeWidth = progressWidth
-            isAntiAlias = true
-        }
+        progressPaint.color = c
+        invalidate()
+    }
+
+    /**
+     * Sets the remaining text color.
+     *
+     * @param c {Int} The color state list to set.
+     */
+    fun setRemainingTextColor(c: Int) {
+        remainingText.setTextColor(c)
+        invalidate()
+    }
+
+    /**
+     * Sets the remaining text color.
+     *
+     * @param c {ColorStateList} The color state list to set.
+     */
+    fun setRemainingTextColor(c: ColorStateList?) {
+        remainingText.setTextColor(c)
+        invalidate()
     }
 
     /**

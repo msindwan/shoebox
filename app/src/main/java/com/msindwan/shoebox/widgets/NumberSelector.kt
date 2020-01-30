@@ -28,7 +28,7 @@ import org.threeten.bp.LocalDate
 /**
  * Year selector component.
  */
-class YearSelector : TextView {
+class NumberSelector : TextView {
     var value = LocalDate.now().year
         set(value) {
             text = value.toString()
@@ -36,8 +36,12 @@ class YearSelector : TextView {
         }
     var maxValue: Int = value + 100
     var minValue: Int = (value - 100).coerceAtLeast(0)
+        set(value) {
+            field = value.coerceAtLeast(0)
+        }
 
-    private var onYearSelected: ((year: Int) -> Unit)? = null
+    var onYearSelected: ((year: Int) -> Unit)? = null
+    var title: String? = null
 
     constructor(context: Context) : super(context) {
         setup()
@@ -50,18 +54,9 @@ class YearSelector : TextView {
     /**
      * Initializes the view.
      */
-    fun setup() {
+    private fun setup() {
         setOnClickListener(onSelectorClick)
         text = value.toString()
-    }
-
-    /**
-     * Sets the listener for when a year is selected.
-     *
-     * @param listener {(year: Int) -> Unit} The callback fired when a year is selected.
-     */
-    fun setOnYearSelectedListener(listener: (year: Int) -> Unit) {
-        onYearSelected = listener
     }
 
     /**
@@ -70,10 +65,13 @@ class YearSelector : TextView {
     private val onSelectorClick = OnClickListener {
         // Initialize the dialog to select a year.
         val dialog = Dialog(context)
-        dialog.setContentView(R.layout.year_selector_dialog)
-        val picker = dialog.findViewById<NumberPicker>(R.id.year_selector_number_picker)
-        val btnOk = dialog.findViewById<Button>(R.id.year_selector_ok)
-        val btnCancel = dialog.findViewById<Button>(R.id.year_selector_cancel)
+        dialog.setContentView(R.layout.number_selector_dialog)
+        val picker = dialog.findViewById<NumberPicker>(R.id.number_selector_dialog_number_picker)
+        val btnOk = dialog.findViewById<Button>(R.id.number_selector_dialog_btn_ok)
+        val btnCancel = dialog.findViewById<Button>(R.id.number_selector_dialog_btn_cancel)
+        val txtTitle = dialog.findViewById<TextView>(R.id.number_selector_dialog_txt_title)
+
+        txtTitle.text = title
 
         btnOk.setOnClickListener {
             text = picker.value.toString()
@@ -81,9 +79,7 @@ class YearSelector : TextView {
             dialog.dismiss()
         }
 
-        btnCancel.setOnClickListener {
-            dialog.dismiss()
-        }
+        btnCancel.setOnClickListener { dialog.dismiss() }
 
         // Initialize the year picker to the existing value constraints.
         picker.maxValue = maxValue

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.msindwan.shoebox.widgets
 
 import android.app.DatePickerDialog
@@ -21,10 +20,13 @@ import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.util.AttributeSet
-import android.view.LayoutInflater
+import android.util.TypedValue
+import android.view.ViewGroup
 import android.widget.DatePicker
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import com.msindwan.shoebox.R
@@ -37,36 +39,37 @@ import org.threeten.bp.format.DateTimeFormatter
  */
 class DateInput : LinearLayout {
 
-    var fragmentManager: FragmentManager? = null
-
     private val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-    private var textView: TextView? = null
-    private var date: LocalDate? = LocalDate.now()
+    private lateinit var textView: TextView
+
+    var fragmentManager: FragmentManager? = null
+    var date: LocalDate? = LocalDate.now()
+        set(newDate) {
+            textView.text = if (newDate == null) "" else formatter.format(newDate)
+            field = newDate
+        }
 
     /**
      * Date picker dialog fragment.
-     *
-     * @constructor(date, handleDateSet)
-     * @param date {Date} The initial date.
-     * @param handleDateSet {(...) -> Unit) Callback fired when the date is set.
      */
     class DatePickerFragment(
-        private val date: LocalDate,
-        private val handleDateSet: ((view: DatePicker, year: Int, month: Int, day: Int) -> Unit)
+        val date: LocalDate?,
+        val handleDataSet: ((year: Int, month: Int, days: Int) -> Unit)
     ) : DialogFragment(), DatePickerDialog.OnDateSetListener {
 
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+            val selectedDate = date ?: LocalDate.now()
             return DatePickerDialog(
                 context!!,
                 this,
-                date.year,
-                date.monthValue - 1,
-                date.dayOfMonth
+                selectedDate.year,
+                selectedDate.monthValue - 1,
+                selectedDate.dayOfMonth
             )
         }
 
         override fun onDateSet(view: DatePicker, year: Int, month: Int, day: Int) {
-            handleDateSet(view, year, month + 1, day)
+            handleDataSet(year, month + 1, day)
         }
     }
 
@@ -79,41 +82,46 @@ class DateInput : LinearLayout {
     }
 
     /**
-     * Getter for the input date.
-     *
-     * @returns the selected date
-     */
-    fun getDate(): LocalDate? {
-        return date
-    }
-
-    /**
-     * Sets the current date for the input.
-     *
-     * @param newDate {Date} The date to set.
-     */
-    fun setDate(newDate: LocalDate?) {
-        if (newDate == null) {
-            textView?.text = ""
-        } else {
-            textView?.text = formatter.format(newDate)
-        }
-        date = newDate
-    }
-
-    /**
      * Initializes the view.
      */
     private fun setup() {
-        val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        inflater.inflate(R.layout.date_input, this, true)
         orientation = HORIZONTAL
 
-        textView = getChildAt(0) as TextView
+        val imageView = ImageView(context)
+
+        // @todo: Scale the width to the height of the text input (possibly with constraint layout)
+        imageView.layoutParams = LayoutParams(
+            TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                20F,
+                context.resources.displayMetrics
+            ).toInt(),
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        imageView.adjustViewBounds = true
+        imageView.contentDescription = resources.getString(R.string.date)
+        imageView.setImageDrawable(
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.ic_calendar,
+                null
+            )
+        )
+
+        textView = TextView(context)
+        textView.layoutParams = LayoutParams(
+            0,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            1.0F
+        )
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14F)
 
         if (date != null) {
-            textView?.text = formatter.format(date!!)
+            textView.text = formatter.format(date!!)
         }
+
+        addView(textView)
+        addView(imageView)
         setOnClickListener(onDateInputClicked)
     }
 
@@ -122,14 +130,9 @@ class DateInput : LinearLayout {
      */
     private val onDateInputClicked = OnClickListener {
         if (fragmentManager != null) {
-            val datePickerFragment =
-                DatePickerFragment(
-                    date ?: LocalDate.now()
-                ) { _: DatePicker, year: Int, month: Int, day: Int ->
-                    date = LocalDate.of(year, month, day)
-                    setDate(date)
-                }
-            datePickerFragment.show(fragmentManager!!, "DateInput")
+            DatePickerFragment(date) { year: Int, month: Int, day: Int ->
+                date = LocalDate.of(year, month, day)
+            }.show(fragmentManager!!, "DateInput")
         }
     }
 }

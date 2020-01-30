@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.msindwan.shoebox.views.setup
 
 import android.content.Intent
@@ -36,9 +35,9 @@ import org.threeten.bp.LocalDate
  */
 class Setup : AppCompatActivity() {
 
-    private var setupTxtBudget: CurrencyInput? = null
-    private var setupTxtTitle: TextView? = null
-    private var setupBtnNext: Button? = null
+    private var txtBudget: CurrencyInput? = null
+    private var txtTitle: TextView? = null
+    private var btnNext: Button? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,24 +49,24 @@ class Setup : AppCompatActivity() {
      * Initializes the view.
      */
     private fun setup() {
-        setupTxtBudget = findViewById(R.id.setup_txt_budget)
-        setupTxtTitle = findViewById(R.id.setup_txt_title)
-        setupBtnNext = findViewById(R.id.setup_btn_next)
+        txtBudget = findViewById(R.id.setup_txt_budget)
+        txtTitle = findViewById(R.id.setup_txt_title)
+        btnNext = findViewById(R.id.setup_btn_next)
 
-        setupBtnNext?.setOnClickListener(onSetupBtnNextClick)
+        btnNext?.setOnClickListener(onSetupBtnNextClick)
     }
 
     /**
      * Handles pressing the "next" button.
      */
     private var onSetupBtnNextClick = View.OnClickListener {
-        setupBtnNext?.isEnabled = false
+        btnNext?.isEnabled = false
 
-        val budget: Long = setupTxtBudget?.getAmount() ?: 0L
+        val budget: Long = txtBudget?.getAmount() ?: 0L
 
         if (budget <= 0L) {
-            setupTxtBudget?.setError(resources.getString(R.string.budget_validation))
-            setupBtnNext?.isEnabled = true
+            txtBudget?.editText?.error = resources.getString(R.string.budget_validation)
+            btnNext?.isEnabled = true
         } else {
             val now: LocalDate = LocalDate.now()
             val dal: DataAccessLayer = DataAccessLayer.getInstance(applicationContext)
@@ -80,7 +79,6 @@ class Setup : AppCompatActivity() {
                 budget,
                 Currency.USD
             )
-
 
             val dashboard = Intent(applicationContext, Dashboard::class.java)
             startActivity(dashboard)

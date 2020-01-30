@@ -9,16 +9,16 @@
     android:padding="20dp">
 
     <TextView
+        android:id="@+id/number_selector_dialog_txt_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
-        android:text="@string/year"
         android:textAlignment="center"
         android:textSize="24sp"
         app:fontFamily="@font/staatliches_font_family" />
 
     <NumberPicker
-        android:id="@+id/year_selector_number_picker"
+        android:id="@+id/number_selector_dialog_number_picker"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center" />
@@ -30,7 +30,7 @@
         android:padding="10dp">
 
         <Button
-            android:id="@+id/year_selector_ok"
+            android:id="@+id/number_selector_dialog_btn_ok"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -40,7 +40,7 @@
             android:textColor="@color/colorPrimary" />
 
         <Button
-            android:id="@+id/year_selector_cancel"
+            android:id="@+id/number_selector_dialog_btn_cancel"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

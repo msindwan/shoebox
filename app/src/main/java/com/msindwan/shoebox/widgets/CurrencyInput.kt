@@ -13,25 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.msindwan.shoebox.widgets
 
 import android.content.Context
+import android.graphics.Color
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.widget.LinearLayout
 import com.msindwan.shoebox.R
 import android.text.Editable
+import android.text.InputType
 import android.widget.EditText
 import android.text.TextWatcher
 import android.text.Selection
+import android.util.TypedValue
+import android.view.Gravity
+import android.widget.TextView
 
 
 /**
  * A TextView control with formatting to ensure that a user inputs a valid monetary value.
  */
 class CurrencyInput : LinearLayout {
-    private var editText: EditText? = null
+    var editText: EditText? = null
+        private set
+
+    private lateinit var textView: TextView
 
     constructor(context: Context) : super(context) {
         setup()
@@ -54,14 +60,43 @@ class CurrencyInput : LinearLayout {
      * Initializes the view.
      */
     private fun setup() {
-        val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        inflater.inflate(R.layout.currency_input, this, true)
-
         setBackgroundResource(R.drawable.input_background)
         orientation = HORIZONTAL
 
-        editText = getChildAt(1) as EditText
+        val textViewPadding = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            5F,
+            resources.displayMetrics
+        ).toInt()
+
+        val editTextPadding = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            8F,
+            resources.displayMetrics
+        ).toInt()
+
+        textView = TextView(context)
+        textView.gravity = Gravity.CENTER
+        textView.setPadding(textViewPadding, textViewPadding, 0, 0)
+        textView.text = resources.getString(R.string.currency_symbol)
+        textView.setTextColor(Color.parseColor("#707070"))
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
+
+        editText = EditText(context)
+        editText?.layoutParams = LayoutParams(
+            0,
+            LayoutParams.WRAP_CONTENT,
+            1.0F
+        )
+        editText?.setPadding(editTextPadding, editTextPadding, editTextPadding, editTextPadding)
+        editText?.setBackgroundColor(Color.TRANSPARENT)
+        editText?.hint = resources.getString(R.string.zero_dollars)
         editText?.addTextChangedListener(currencyEditTextFormatter)
+        editText?.inputType = InputType.TYPE_NUMBER_FLAG_DECIMAL
+        editText?.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
+
+        addView(textView)
+        addView(editText)
     }
 
     /**
@@ -76,24 +111,6 @@ class CurrencyInput : LinearLayout {
             return 0L
         }
         return (text.toDouble() * 100).toLong()
-    }
-
-    /**
-     * Sets an error message for the input.
-     *
-     * @param error {String} The error string to set.
-     */
-    fun setError(error: String) {
-        editText?.error = error
-    }
-
-    /**
-     * Sets the text for the input.
-     *
-     * @param text {String} The text to set.
-     */
-    fun setText(text: String) {
-        editText?.setText(text)
     }
 
     /**

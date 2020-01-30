@@ -24,7 +24,6 @@ import com.msindwan.shoebox.data.entities.Currency
 import com.msindwan.shoebox.data.entities.Interval
 import com.msindwan.shoebox.data.entities.LocalDateRange
 import org.threeten.bp.Instant
-import org.threeten.bp.Period
 
 
 /**
@@ -57,7 +56,10 @@ class BudgetTable(private val dbHelper: SQLiteDatabaseHelper) : BudgetDAO {
         }
     }
 
-    override fun getBudgets(dateRange: LocalDateRange, groupBy: BudgetDAO.Companion.GroupBudgets): Array<Budget?> {
+    override fun getBudgets(
+        dateRange: LocalDateRange,
+        groupBy: BudgetDAO.Companion.GroupBudgets
+    ): List<Budget?> {
         val budgets: MutableList<Budget> = mutableListOf()
 
         val m1 = dateRange.startDate!!.monthValue.toString()
@@ -93,24 +95,7 @@ class BudgetTable(private val dbHelper: SQLiteDatabaseHelper) : BudgetDAO {
                     ELSE 0
                 END
             """.trimIndent(),
-            arrayOf(
-                y1,
-                y2,
-                m1,
-                m2,
-                y1,
-                m1,
-                y2,
-                m2,
-                y1,
-                y1,
-                y2,
-                y2,
-                y2,
-                y1,
-                m1,
-                m2
-            ),
+            arrayOf(y1, y2, m1, m2, y1, m1, y2, m2, y1, y1, y2, y2, y2, y1, m1, m2),
             null,
             null,
             "$COL_DATE_LAST_UPDATED DESC"
@@ -136,65 +121,28 @@ class BudgetTable(private val dbHelper: SQLiteDatabaseHelper) : BudgetDAO {
         }
         cBudgets?.close()
 
-        val period = Period.between(dateRange.startDate, dateRange.endDate.plusDays(1))
-        val years = period.years + (if (period.months > 0) 1 else 0)
-        val months =
-            (period.years * 12 + period.months + (if (period.days > 0) 1 else 0)).coerceAtLeast(
-                1
-            )
+        // Group budgets by date.
+        // NOTE: Currently this is done in memory. I'd like to investigate the LOE for implementing
+        // a more SQL-oriented solution.
+        val groupedBudgets: MutableList<Budget?> = mutableListOf()
 
-        if (groupBy == BudgetDAO.Companion.GroupBudgets.MONTH) {
-            val budgetsPerMonth = arrayOfNulls<Budget>(months)
+        for (i in 0 until dateRange.months) {
+            val month = dateRange.startDate.plusMonths(i.toLong())
+            val budget = budgets.find { b -> b.isApplicableToDate(month) }?.copyForDate(month)
 
-            for (i in 0 until months) {
-                val nextMonth = dateRange.startDate.plusMonths(i.toLong())
-
-                for (budget in budgets) {
-                    if (
-                        (budget.month == nextMonth.monthValue && budget.year == nextMonth.year) ||
-                        (budget.month == nextMonth.monthValue && budget.interval == Interval.Y) ||
-                        ((i + 1 > budget.month || nextMonth.year > budget.year) && budget.interval == Interval.M)
-                    ) {
-                        budgetsPerMonth[i] = budget.copy()
-                        break
-                    }
-                }
-            }
-
-            return budgetsPerMonth
-
-        }
-
-        val budgetsPerYear = arrayOfNulls<Budget>(years)
-        var yIndex = 0
-        var year = dateRange.startDate.year
-
-        for (i in 0 until months) {
-            val nextMonth = dateRange.startDate.plusMonths(i.toLong())
-
-            if (nextMonth.year != year) {
-                year = nextMonth.year
-                yIndex++
-            }
-
-            for (budget in budgets) {
-                if (
-                    (budget.month == nextMonth.monthValue && budget.year == nextMonth.year) ||
-                    (budget.month == nextMonth.monthValue && budget.interval == Interval.Y) ||
-                    ((i + 1 > budget.month || nextMonth.year > budget.year) && budget.interval == Interval.M)
-                ) {
-                    if (budgetsPerYear[yIndex] == null) {
-                        budgetsPerYear[yIndex] = budget.copy()
-                    } else {
-                        budgetsPerYear[yIndex]!!.amount += budget.amount
-                        budgetsPerYear[yIndex]!!.interval = Interval.N
-                    }
-                    break
+            if (groupBy == BudgetDAO.Companion.GroupBudgets.MONTH) {
+                groupedBudgets.add(budget)
+            } else {
+                if (groupedBudgets.lastOrNull()?.year != month.year) {
+                    groupedBudgets.add(budget)
+                } else {
+                    groupedBudgets.last()!!.amount += budget?.amount ?: 0
+                    groupedBudgets.last()!!.interval = Interval.N
                 }
             }
         }
 
-        return budgetsPerYear
+        return groupedBudgets
     }
 
     override fun upsertBudget(

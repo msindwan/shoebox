@@ -28,7 +28,7 @@ import androidx.lifecycle.ViewModelProviders
 import com.msindwan.shoebox.R
 import com.msindwan.shoebox.data.entities.LocalDateRange
 import com.msindwan.shoebox.views.dashboard.models.DashboardViewModel
-import com.msindwan.shoebox.widgets.BudgetGraph
+import com.msindwan.shoebox.views.dashboard.components.BudgetGraph
 import com.msindwan.shoebox.widgets.ButtonToggleGroup
 import org.threeten.bp.Period
 import org.threeten.bp.format.DateTimeFormatter
@@ -102,14 +102,10 @@ class DashboardTrendsFragment : Fragment() {
     }
 
     private val onDateRangeChanged = fun (view: View) {
-        val currentYear = LocalDateRange.currentYear()
         val dateRange = if (view.tag == "Monthly") {
-            currentYear
+            LocalDateRange.currentYear().minusEndMonths(4)
         } else {
-            LocalDateRange(
-                currentYear.startDate,
-                currentYear.endDate?.plusYears(11)
-            )
+            LocalDateRange.currentYear().plusEndYears(7)
         }
         dashboardModel.setTrendsDateRange(dateRange)
     }

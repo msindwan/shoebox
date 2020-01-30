@@ -17,6 +17,7 @@
 package com.msindwan.shoebox.views.dashboard.fragments
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -48,6 +49,7 @@ class DashboardHome : Fragment() {
     private var dashboardHomeGaugeBudget: Gauge? = null
     private var dashboardHomeLstTxns: TransactionListView? = null
     private var dashboardHomeBtnAddTxn: Button? = null
+    private var defaultGaugeRemainingTextColor: ColorStateList? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -67,6 +69,7 @@ class DashboardHome : Fragment() {
      */
     fun setup(view: View) {
         dashboardHomeGaugeBudget = view.findViewById(R.id.dashboard_home_gauge_budget)
+        defaultGaugeRemainingTextColor = dashboardHomeGaugeBudget?.remainingTextColors
         dashboardHomeLstTxns = view.findViewById(R.id.dashboard_home_lst_transactions)
         dashboardHomeLstTxns?.setViewMoreClickListener(onViewMoreTransactionsClicked)
 
@@ -87,12 +90,19 @@ class DashboardHome : Fragment() {
         val remainingBudget = totalBudget - (dashboardModel.getSumOfTransactions().value!! / 100F)
         val budgetPercentage = remainingBudget / totalBudget
 
+        dashboardHomeGaugeBudget?.remainingText?.text = currencyFormatter.format(remainingBudget)
+
         dashboardHomeGaugeBudget?.setGaugeText(
             currencyFormatter.format(remainingBudget),
             currencyFormatter.format(totalBudget)
         )
 
         // @todo Make constants out of colors
+        if (remainingBudget <= 0) {
+            dashboardHomeGaugeBudget?.setRemainingTextColor(Color.parseColor("#E28080"))
+        } else {
+            dashboardHomeGaugeBudget?.setRemainingTextColor(defaultGaugeRemainingTextColor)
+        }
         when {
             budgetPercentage > 0.5F -> dashboardHomeGaugeBudget?.setProgressBarColor(
                 Color.parseColor(

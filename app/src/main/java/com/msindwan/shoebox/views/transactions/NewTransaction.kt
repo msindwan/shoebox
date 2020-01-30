@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.msindwan.shoebox.views.transactions
 
 import android.os.Bundle
@@ -34,13 +33,12 @@ import com.msindwan.shoebox.helpers.ActivityHelpers
  */
 class NewTransaction : AppCompatActivity() {
 
-    private var newTransactionTxtCategory: EditText? = null
-    private var newTransactionTxtAmount: CurrencyInput? = null
-    private var newTransactionTxtTitle: EditText? = null
-    private var newTransactionTxtDate: DateInput? = null
-
-    private var newTransactionBtnAddTxn: Button? = null
-    private var newTransactionBtnCancel: Button? = null
+    private var txtCategory: EditText? = null
+    private var txtAmount: CurrencyInput? = null
+    private var txtTitle: EditText? = null
+    private var txtDate: DateInput? = null
+    private var btnAddTxn: Button? = null
+    private var btnCancel: Button? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,42 +58,43 @@ class NewTransaction : AppCompatActivity() {
      * Initializes the view.
      */
     private fun setup() {
-        newTransactionTxtCategory = findViewById(R.id.new_transaction_txt_category)
-        newTransactionTxtAmount = findViewById(R.id.new_transaction_txt_amount)
-        newTransactionTxtTitle = findViewById(R.id.new_transaction_txt_title)
+        txtCategory = findViewById(R.id.new_transaction_txt_category)
+        txtAmount = findViewById(R.id.new_transaction_txt_amount)
+        txtTitle = findViewById(R.id.new_transaction_txt_title)
 
-        newTransactionTxtDate = findViewById(R.id.new_transaction_txt_date)
-        newTransactionTxtDate?.fragmentManager = supportFragmentManager
+        txtDate = findViewById(R.id.new_transaction_txt_date)
+        txtDate?.fragmentManager = supportFragmentManager
 
-        newTransactionBtnAddTxn = findViewById(R.id.new_transaction_btn_add_transaction)
-        newTransactionBtnCancel = findViewById(R.id.new_transaction_btn_cancel)
+        btnAddTxn = findViewById(R.id.new_transaction_btn_add_transaction)
+        btnCancel = findViewById(R.id.new_transaction_btn_cancel)
 
-        newTransactionBtnAddTxn?.setOnClickListener(onAddClicked)
-        newTransactionBtnCancel?.setOnClickListener(onCancelClicked)
+        btnAddTxn?.setOnClickListener(onAddClicked)
+        btnCancel?.setOnClickListener(onCancelClicked)
     }
 
     /**
      * Handles when the "Add" button is clicked.
      */
     private val onAddClicked = View.OnClickListener {
-        newTransactionBtnAddTxn?.isEnabled = false
+        btnAddTxn?.isEnabled = false
 
-        val amount: Long = newTransactionTxtAmount?.getAmount() ?: 0
+        val amount: Long = txtAmount?.getAmount() ?: 0
         if (amount <= 0L) {
-            newTransactionTxtAmount?.setError(resources.getString(R.string.budget_validation))
-            newTransactionBtnAddTxn?.isEnabled = true
+            txtAmount?.editText?.error =
+                resources.getString(R.string.budget_validation)
+            btnAddTxn?.isEnabled = true
         } else {
-            var title: String = newTransactionTxtTitle?.text?.toString() ?: ""
+            var title: String = txtTitle?.text?.toString() ?: ""
             if (title.isEmpty()) {
                 title = resources.getString(R.string.no_title)
             }
 
-            var category: String = newTransactionTxtCategory?.text?.toString() ?: ""
+            var category: String = txtCategory?.text?.toString() ?: ""
             if (category.isEmpty()) {
                 category = resources.getString(R.string.misc)
             }
 
-            val date: Long = newTransactionTxtDate!!.getDate()!!.toEpochDay()
+            val date: Long = txtDate!!.date!!.toEpochDay()
 
             val intent = Intent()
             intent.putExtra("date", date)

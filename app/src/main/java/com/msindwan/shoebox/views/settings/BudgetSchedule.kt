@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.msindwan.shoebox.views.settings
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -38,21 +38,21 @@ import com.msindwan.shoebox.views.settings.fragments.ScheduleCalendarFragment
 import com.msindwan.shoebox.views.settings.models.SettingsViewModel
 import com.msindwan.shoebox.widgets.CurrencyInput
 import org.threeten.bp.LocalDate
-import com.msindwan.shoebox.widgets.YearSelector
+import com.msindwan.shoebox.widgets.NumberSelector
+
 
 /**
  * Activity for budget schedule settings.
  */
 class BudgetSchedule : AppCompatActivity() {
+    private var ciCurrentBudget: CurrencyInput? = null
+    private var ysCalendarYear: NumberSelector? = null
+    private var txtCurrentMonth: TextView? = null
+    private var spnRepeatBudget: Spinner? = null
+    private var btnUpdateBudget: Button? = null
+    private var vpCalendar: ViewPager2? = null
 
-    private var calendarViewPager: ViewPager2? = null
-    private var currentMonth: TextView? = null
-    private var calendarYear: YearSelector? = null
-    private var currentBudget: CurrencyInput? = null
-    private var updateBudget: Button? = null
-    private var repeatBudget: Spinner? = null
-
-    private var text = mapOf(
+    private var intervalTextMap: LinkedHashMap<String, Interval> = linkedMapOf(
         Pair("Never", Interval.N),
         Pair("Every Month", Interval.M),
         Pair("Every Year", Interval.Y)
@@ -60,9 +60,19 @@ class BudgetSchedule : AppCompatActivity() {
 
     private lateinit var settingsModel: SettingsViewModel
 
-    private inner class CalendarPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle) : FragmentStateAdapter(fragmentManager, lifecycle) {
+    companion object {
+        private const val NUM_PAGES = 200
+    }
+
+    /**
+     * Pager class for calendar views.
+     */
+    private inner class CalendarPagerAdapter(
+        fragmentManager: FragmentManager,
+        lifecycle: Lifecycle
+    ) : FragmentStateAdapter(fragmentManager, lifecycle) {
         override fun getItemCount(): Int {
-            return 200
+            return NUM_PAGES
         }
 
         override fun createFragment(position: Int): Fragment {
@@ -96,90 +106,123 @@ class BudgetSchedule : AppCompatActivity() {
         settingsModel.getBudgetScheduleMonth().observe(this, Observer { update() })
         settingsModel.getMonthlyBudgets().observe(this, Observer { update() })
 
-        updateBudget = findViewById(R.id.budget_schedule_update)
-        updateBudget?.setOnClickListener(onBudgetUpdated)
+        btnUpdateBudget = findViewById(R.id.budget_schedule_update)
+        btnUpdateBudget?.setOnClickListener(onBudgetUpdated)
 
-        repeatBudget = findViewById(R.id.budget_schedule_repeat_budget)
+        val intervalAdapter = ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_spinner_item,
+            intervalTextMap.keys.toTypedArray()
+        )
+        intervalAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spnRepeatBudget = findViewById(R.id.budget_schedule_repeat_budget)
+        spnRepeatBudget?.adapter = intervalAdapter
 
-        calendarYear = findViewById(R.id.budget_schedule_year)
-        calendarYear?.setOnYearSelectedListener(onYearSelected)
+        ysCalendarYear = findViewById(R.id.budget_schedule_year)
+        ysCalendarYear?.onYearSelected = onYearSelected
+        ysCalendarYear?.title = resources.getString(R.string.year)
 
-        currentMonth = findViewById(R.id.budget_schedule_current_month)
-        currentMonth?.setOnClickListener(onCurrentMonthSelected)
+        txtCurrentMonth = findViewById(R.id.budget_schedule_current_month)
+        txtCurrentMonth?.setOnClickListener(onCurrentMonthSelected)
 
-        currentBudget = findViewById(R.id.budget_schedule_edit_budget)
+        ciCurrentBudget = findViewById(R.id.budget_schedule_edit_budget)
 
-        calendarViewPager = findViewById(R.id.budget_schedule_calendar_pager)
-        calendarViewPager?.adapter =
-            CalendarPagerAdapter(supportFragmentManager, lifecycle)
-        calendarViewPager?.registerOnPageChangeCallback(onCalendarViewPaged)
-        calendarViewPager?.setCurrentItem(100, false)
+        vpCalendar = findViewById(R.id.budget_schedule_calendar_pager)
+        vpCalendar?.adapter = CalendarPagerAdapter(supportFragmentManager, lifecycle)
+        vpCalendar?.registerOnPageChangeCallback(onCalendarViewPaged)
+        vpCalendar?.setCurrentItem(NUM_PAGES / 2, false)
     }
 
+    /**
+     * Updates the view based on the view model state.
+     */
     private fun update() {
-        val year = settingsModel.getBudgetScheduleYear().value ?: LocalDate.now().year
-        val month = settingsModel.getBudgetScheduleMonth().value ?: LocalDate.now().monthValue
-        val budgets = settingsModel.getMonthlyBudgets().value
         val now = LocalDate.now()
+        val month = settingsModel.getBudgetScheduleMonth().value ?: now.monthValue
+        val year = settingsModel.getBudgetScheduleYear().value ?: now.year
+        val budgets = settingsModel.getMonthlyBudgets().value
 
-        calendarYear?.value = year
-        calendarYear?.maxValue = year + 100
-        calendarYear?.minValue = (year - 100).coerceAtLeast(0)
+        ysCalendarYear?.value = year
+        ysCalendarYear?.maxValue = now.year + 100
+        ysCalendarYear?.minValue = now.year - 100
 
         val budget = budgets?.get(month - 1)
-
         if (budget != null) {
-            currentBudget?.setText(budget.amount.toString())
+            ciCurrentBudget?.editText?.setText(budget.amount.toString())
         } else {
-            currentBudget?.setText("")
+            ciCurrentBudget?.editText?.text?.clear()
         }
 
         if (year < now.year || month < now.monthValue) {
-            updateBudget?.isClickable = false
-            updateBudget?.isEnabled = false
-            currentBudget?.isEnabled = false
-            repeatBudget?.isEnabled = false
-            currentBudget?.setText("")
+            btnUpdateBudget?.isEnabled = false
+            ciCurrentBudget?.isEnabled = false
+            spnRepeatBudget?.isEnabled = false
+            ciCurrentBudget?.editText?.text?.clear()
         } else {
-            currentBudget?.isEnabled = true
-            repeatBudget?.isEnabled = true
-            updateBudget?.isClickable = true
-            updateBudget?.isEnabled = true // if either have changed
+            ciCurrentBudget?.isEnabled = true
+            spnRepeatBudget?.isEnabled = true
+            btnUpdateBudget?.isEnabled = true
         }
     }
 
-    private val onYearSelected = fun (year: Int) {
-        calendarViewPager?.setCurrentItem(100 + (year - LocalDate.now().year), false)
+    /**
+     * Handler for the year selector.
+     */
+    private val onYearSelected = fun(year: Int) {
+        vpCalendar?.setCurrentItem(
+            NUM_PAGES / 2 + (year - LocalDate.now().year),
+            false
+        )
     }
 
+    /**
+     * Handler for selecting the current month.
+     */
     private val onCurrentMonthSelected = View.OnClickListener {
-        if (calendarViewPager?.currentItem == 100) {
-            val now = LocalDate.now()
+        val year = settingsModel.getBudgetScheduleYear().value!!
+        val now = LocalDate.now()
+
+        if (year == now.year) {
             settingsModel.setBudgetScheduleMonth(now.monthValue)
         } else {
-            calendarViewPager?.setCurrentItem(100, false)
+            vpCalendar?.setCurrentItem(NUM_PAGES / 2, false)
         }
     }
 
-    private val onCalendarViewPaged = object: ViewPager2.OnPageChangeCallback() {
+    /**
+     * Handler for the calendar view pager.
+     */
+    private val onCalendarViewPaged = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
             super.onPageSelected(position)
             val now = LocalDate.now()
-            settingsModel.setBudgetScheduleYear(now.year + position - 100)
-            // @todo: find the first active month, else null
-            settingsModel.setBudgetScheduleMonth(now.monthValue)
+            val selectedYear = now.plusYears((position - NUM_PAGES / 2).toLong())
+
+            settingsModel.setBudgetScheduleYear(selectedYear.year)
+            if (selectedYear.year == now.year) {
+                settingsModel.setBudgetScheduleMonth(now.monthValue)
+            } else {
+                settingsModel.setBudgetScheduleMonth(1)
+            }
         }
     }
 
+    /**
+     * Handler for when the budget is updated.
+     */
     private val onBudgetUpdated = View.OnClickListener {
         val year = settingsModel.getBudgetScheduleYear().value ?: LocalDate.now().year
         val month = settingsModel.getBudgetScheduleMonth().value ?: LocalDate.now().monthValue
+        val updatedBudget = ciCurrentBudget?.getAmount()
+        val updatedInterval = intervalTextMap[spnRepeatBudget?.selectedItem] ?: Interval.N
 
-        val updatedBudget = currentBudget?.getAmount()
-        val updatedInterval = text[repeatBudget?.selectedItem] ?: Interval.N
+        val intent = Intent()
+        intent.putExtra("month", month)
+        intent.putExtra("year", year)
+        intent.putExtra("budget", updatedBudget)
+        intent.putExtra("interval", updatedInterval)
 
-        settingsModel.insertOrUpdateBudget(month, year, updatedBudget!!, updatedInterval)
-        setResult(ActivityHelpers.BUDGET_SCHEDULE_SUCCESS_RESPONSE_CODE)
+        setResult(ActivityHelpers.BUDGET_SCHEDULE_SUCCESS_RESPONSE_CODE, intent)
         finish()
     }
 }

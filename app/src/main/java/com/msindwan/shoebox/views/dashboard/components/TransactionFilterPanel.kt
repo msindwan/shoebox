@@ -94,8 +94,8 @@ class TransactionFilterPanel : LinearLayout {
         filterNoStartDate?.setOnClickListener(onNoStartDateClicked)
         filterNoEndDate?.setOnClickListener(onNoEndDateClicked)
 
-        filterTo?.setDate(null)
-        filterFrom?.setDate(null)
+        filterTo?.date = null
+        filterFrom?.date = null
 
         filterAmount?.setMaxValue(MAX_FILTER_AMOUNT.toFloat())
         filterAmount?.setMinValue(MIN_FILTER_AMOUNT.toFloat())
@@ -142,8 +142,8 @@ class TransactionFilterPanel : LinearLayout {
 
         filterTitle?.setText(searchFilters.title)
         filterCategory?.setText(searchFilters.category)
-        filterFrom?.setDate(startDate)
-        filterTo?.setDate(endDate)
+        filterFrom?.date = startDate
+        filterTo?.date = endDate
         setAmountRange(
             searchFilters.minAmount?.div(100) ?: MIN_FILTER_AMOUNT,
             searchFilters.maxAmount?.div(100) ?: MAX_FILTER_AMOUNT
@@ -207,8 +207,8 @@ class TransactionFilterPanel : LinearLayout {
             category = null
         }
 
-        val from = filterFrom?.getDate()
-        val to = filterTo?.getDate()
+        val from = filterFrom?.date
+        val to = filterTo?.date
 
         if (from != null || to != null) {
             numFilters++
@@ -235,14 +235,14 @@ class TransactionFilterPanel : LinearLayout {
      * Handles clicking on "No start date" for the date range.
      */
     private val onNoStartDateClicked = OnClickListener {
-        filterFrom?.setDate(null)
+        filterFrom?.date = null
     }
 
     /**
      * Handles clicking on "No end date" for the date range.
      */
     private val onNoEndDateClicked = OnClickListener {
-        filterTo?.setDate(null)
+        filterTo?.date = null
     }
 
     /**

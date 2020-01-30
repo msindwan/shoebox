@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white"
@@ -9,24 +11,24 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="12dp">
+        android:paddingLeft="12dp"
+        android:paddingTop="12dp"
+        android:paddingRight="12dp">
 
-        <com.msindwan.shoebox.widgets.YearSelector
+        <com.msindwan.shoebox.widgets.NumberSelector
             android:id="@+id/budget_schedule_year"
-            android:background="?attr/selectableItemBackground"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
             android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
             android:drawableStart="@drawable/ic_expand_more_24px"
             android:drawableLeft="@drawable/ic_expand_more_24px"
-            android:fontFamily="@font/staatliches_font_family"
-            android:text="2020"
             android:padding="10dp"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            app:fontFamily="@font/staatliches_font_family" />
 
         <TextView
-            android:padding="10dp"
             android:id="@+id/budget_schedule_current_month"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -35,12 +37,11 @@
             android:drawableStart="@drawable/ic_calendar"
             android:drawableLeft="@drawable/ic_calendar"
             android:drawablePadding="8dp"
-            android:fontFamily="@font/staatliches_font_family"
             android:gravity="center"
-            android:text="This month"
-            android:textSize="16sp">
-
-        </TextView>
+            android:padding="10dp"
+            android:text="@string/this_month"
+            android:textSize="16sp"
+            app:fontFamily="@font/staatliches_font_family" />
 
     </LinearLayout>
 
@@ -55,7 +56,6 @@
             android:layout_height="wrap_content" />
 
     </ScrollView>
-
 
     <View
         android:layout_width="match_parent"
@@ -87,11 +87,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="start"
-                    android:fontFamily="@font/staatliches_font_family"
                     android:paddingBottom="10dp"
-                    android:text="Budget"
+                    android:text="@string/budget"
                     android:textColor="#A3A3A3"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"
+                    app:fontFamily="@font/staatliches_font_family" />
 
                 <com.msindwan.shoebox.widgets.CurrencyInput
                     android:id="@+id/budget_schedule_edit_budget"
@@ -111,19 +111,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="start"
-                    android:fontFamily="@font/staatliches_font_family"
-                    android:paddingBottom="10dp"
+                    android:paddingStart="16dp"
                     android:paddingLeft="16dp"
-                    android:text="Repeat"
+                    android:paddingBottom="10dp"
+                    android:text="@string/repeat"
                     android:textColor="#A3A3A3"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"
+                    app:fontFamily="@font/staatliches_font_family"
+                    tools:ignore="RtlSymmetry" />
 
                 <Spinner
                     android:id="@+id/budget_schedule_repeat_budget"
-                    android:padding="8dp"
-                    android:entries="@array/repeat_budget"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:padding="8dp" />
 
             </LinearLayout>
 
@@ -134,11 +135,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/colorPrimary"
-            android:fontFamily="@font/staatliches_regular"
             android:gravity="center"
-            android:text="Update"
+            android:text="@string/update"
             android:textColor="@android:color/white"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            app:fontFamily="@font/staatliches_regular" />
 
     </LinearLayout>
 

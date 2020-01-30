@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2020 Mayank Sindwani
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.msindwan.shoebox.views.settings.fragments
 
 import android.content.Context
@@ -12,38 +27,36 @@ import com.msindwan.shoebox.R
 import android.util.TypedValue
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.msindwan.shoebox.data.entities.LocalDateRange
 import com.msindwan.shoebox.views.settings.models.SettingsViewModel
 import org.threeten.bp.LocalDate
+import org.threeten.bp.format.DateTimeFormatter
 import java.text.NumberFormat
 import java.util.*
 
 
-val MONTHS = arrayOf(
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec"
-)
-
-class ScheduleCalendarFragment: Fragment() {
+/**
+ * Fragment for each calendar view.
+ */
+class ScheduleCalendarFragment : Fragment() {
 
     private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
-    private val monthViews: MutableList<MonthCalendarItem> = mutableListOf()
+    private val monthCalendarItems: MutableList<MonthCalendarItem> = mutableListOf()
+    private val monthFormatter = DateTimeFormatter.ofPattern("MMM")
     private lateinit var settingsModel: SettingsViewModel
 
-    private inner class MonthCalendarItem(context: Context?): LinearLayout(context) {
+    companion object {
+        private const val MONTH_CALENDAR_ITEM_PADDING = 10
+    }
+
+    /**
+     * Calendar item component representing a month.
+     */
+    private inner class MonthCalendarItem(context: Context?) : LinearLayout(context) {
 
         var select: CheckBox? = null
-        var month: TextView? = null
         var budget: TextView? = null
+        var month: TextView? = null
 
         init {
             setup()
@@ -59,9 +72,15 @@ class ScheduleCalendarFragment: Fragment() {
                 1.0F
             )
             gravity = Gravity.CENTER
-            setPadding(10, 10, 10, 10)
+            setPadding(
+                MONTH_CALENDAR_ITEM_PADDING,
+                MONTH_CALENDAR_ITEM_PADDING,
+                MONTH_CALENDAR_ITEM_PADDING,
+                MONTH_CALENDAR_ITEM_PADDING
+            )
 
-            val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val inflater =
+                context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             inflater.inflate(R.layout.budget_schedule_calendar_item, this, true)
 
             select = findViewById(R.id.budget_schedule_calendar_item_select)
@@ -80,6 +99,12 @@ class ScheduleCalendarFragment: Fragment() {
             }
             super.setEnabled(enabled)
         }
+
+        override fun setSelected(selected: Boolean) {
+            select?.isChecked = selected
+            select?.visibility = if (selected) View.VISIBLE else View.GONE
+            super.setSelected(selected)
+        }
     }
 
     override fun onCreateView(
@@ -92,6 +117,9 @@ class ScheduleCalendarFragment: Fragment() {
         return view
     }
 
+    /**
+     * Initializes the view.
+     */
     private fun setup(view: LinearLayout) {
         view.layoutParams = ViewGroup.LayoutParams(
             GridLayout.LayoutParams.MATCH_PARENT,
@@ -99,7 +127,9 @@ class ScheduleCalendarFragment: Fragment() {
         )
         view.orientation = LinearLayout.VERTICAL
 
+        val currentYear = LocalDateRange.currentYear()
 
+        // Create month items across N rows
         for (i in 1..4) {
             val row = LinearLayout(context)
             row.orientation = LinearLayout.HORIZONTAL
@@ -110,10 +140,12 @@ class ScheduleCalendarFragment: Fragment() {
             )
 
             for (j in 1..3) {
+                val month = currentYear.startDate?.plusMonths((j - 1) + (i - 1) * 3L)
                 val item = MonthCalendarItem(context)
-                item.setOnClickListener{ setSelectedMonth((j - 1) + (i - 1)*3 + 1) }
-                item.month?.text = MONTHS[(j - 1) + (i - 1)*3]
-                monthViews.add(item)
+
+                item.setOnClickListener { settingsModel.setBudgetScheduleMonth(month!!.monthValue) }
+                item.month?.text = monthFormatter.format(month)
+                monthCalendarItems.add(item)
                 row.addView(item)
             }
 
@@ -125,38 +157,27 @@ class ScheduleCalendarFragment: Fragment() {
         settingsModel.getMonthlyBudgets().observe(viewLifecycleOwner, Observer { update() })
     }
 
+    /**
+     * Updates the view based on the view model state.
+     */
     private fun update() {
-        val selectedMonth: Int? = settingsModel.getBudgetScheduleMonth().value
-        val selectedYear: Int? = settingsModel.getBudgetScheduleYear().value
+        val month: Int? = settingsModel.getBudgetScheduleMonth().value
+        val year: Int? = settingsModel.getBudgetScheduleYear().value
         val budgets = settingsModel.getMonthlyBudgets().value
         val now = LocalDate.now()
 
-        if (selectedYear != null && selectedMonth != null) {
-            for ((index, col) in monthViews.withIndex()) {
-                if (budgets?.get(index) != null) {
-                    col.budget?.text = currencyFormatter.format(budgets[index]!!.amount / 100)
+        if (year != null && month != null) {
+            for ((i, col) in monthCalendarItems.withIndex()) {
+                if (budgets?.getOrNull(i) != null) {
+                    col.budget?.text = currencyFormatter.format(budgets[i]!!.amount / 100)
                 } else {
-                    col.budget?.text = "No Budget"
+                    col.budget?.text = getString(R.string.no_budget)
                 }
 
-                if (selectedYear < now.year || (selectedYear == now.year && selectedMonth < now.monthValue)) {
-                    col.select?.visibility = View.GONE
-                    col.select?.isChecked = false
-                    col.isEnabled  = false
-                } else if (index == selectedMonth - 1) {
-                    col.select?.visibility = View.VISIBLE
-                    col.select?.isChecked = true
-                    col.isEnabled  = true
-                } else {
-                    col.select?.visibility = View.GONE
-                    col.select?.isChecked = false
-                    col.isEnabled  = true
-                }
+                val isEnabled = year >= now.year || (year == now.year && (i + 1) >= now.monthValue)
+                col.isSelected = isEnabled && i == month - 1
+                col.isEnabled = isEnabled
             }
         }
-    }
-
-    private fun setSelectedMonth(month: Int) {
-        settingsModel.setBudgetScheduleMonth(month)
     }
 }

@@ -32,6 +32,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.msindwan.shoebox.data.entities.Interval
 import com.msindwan.shoebox.helpers.ActivityHelpers
 import com.msindwan.shoebox.views.dashboard.components.FooterMenu
 import com.msindwan.shoebox.views.dashboard.fragments.DashboardHome
@@ -103,16 +104,28 @@ class Dashboard : AppCompatActivity() {
             resultCode == ActivityHelpers.NEW_TRANSACTION_SUCCESS_RESPONSE_CODE &&
             data != null
         ) {
-            val model = ViewModelProviders.of(this).get(DashboardViewModel::class.java)
-
             val date = data.getLongExtra("date", 0L)
             val title = data.getStringExtra("title")
             val category = data.getStringExtra("category")
             val amount = data.getLongExtra("amount", 0L)
 
-            model.insertTransaction(LocalDate.ofEpochDay(date), title!!, category!!, amount)
-        } else if (requestCode == ActivityHelpers.BUDGET_SCHEDULE_REQUEST_CODE) {
-            dashboardModel.updateBudget()
+            dashboardModel.insertTransaction(
+                LocalDate.ofEpochDay(date),
+                title!!,
+                category!!,
+                amount
+            )
+        } else if (
+            requestCode == ActivityHelpers.BUDGET_SCHEDULE_REQUEST_CODE &&
+            resultCode == ActivityHelpers.BUDGET_SCHEDULE_SUCCESS_RESPONSE_CODE &&
+            data != null
+        ) {
+            val month = data.getIntExtra("month", -1)
+            val year = data.getIntExtra("year", -1)
+            val budget = data.getLongExtra("budget", 0)
+            val interval = data.getSerializableExtra("interval") as Interval
+
+            dashboardModel.insertOrUpdateBudget(month, year, budget, interval)
         }
     }
 

@@ -7,9 +7,10 @@ import com.msindwan.shoebox.data.dao.BudgetDAO
 import com.msindwan.shoebox.data.dao.TransactionDAO
 import com.msindwan.shoebox.data.entities.*
 import com.msindwan.shoebox.views.dashboard.components.FooterMenu
-import com.msindwan.shoebox.widgets.BudgetGraph
+import com.msindwan.shoebox.views.dashboard.components.BudgetGraph
 import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
+import org.threeten.bp.format.DateTimeFormatter
 
 
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
@@ -39,7 +40,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private var trendsDateRange: MutableLiveData<LocalDateRange> =
-        MutableLiveData(LocalDateRange.currentYear())
+        MutableLiveData(LocalDateRange.currentYear().minusEndMonths(4))
 
     private var selectedDateRange: LocalDateRange = LocalDateRange.currentMonth()
     private var searchLastCreatedDate: Instant? = null
@@ -84,6 +85,12 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         updateSearchTransactions()
         updateSumOfTransactions()
         updateTrends()
+    }
+
+    fun insertOrUpdateBudget(month: Int, year: Int, amount: Long, interval: Interval, currency: Currency = Currency.USD) {
+        dal.budgetDAO.upsertBudget(month, year, interval, amount, currency)
+        updateTrends()
+        updateBudget()
     }
 
     fun nextSearchTransactions(limit: Int): Int {
@@ -146,7 +153,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         )
     }
 
-    fun updateBudget() {
+    private fun updateBudget() {
         budget.value = loadBudget()
     }
 
@@ -208,7 +215,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         for ((i, budget) in budgets.withIndex()) {
             val x: Long = budget?.amount ?: 0
             var y: Long = 0
-            val labels: MutableList<String> = mutableListOf()
+            val label: String
 
             for (transaction in transactions) {
                 if (
@@ -224,14 +231,14 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 }
             }
 
-            if (groupTxnSumsBy == TransactionDAO.Companion.GroupTransactionSums.MONTH) {
-                labels.add((trendsDateRange.value!!.startDate!!.monthValue + i).toString())
-                labels.add((trendsDateRange.value!!.startDate!!.year).toString())
+            label = if (groupTxnSumsBy == TransactionDAO.Companion.GroupTransactionSums.MONTH) {
+                val monthF = DateTimeFormatter.ofPattern("MMM YYYY")
+                trendsDateRange.value!!.startDate!!.plusMonths(i.toLong()).format(monthF)
             } else {
-                labels.add((trendsDateRange.value!!.startDate!!.year + i).toString())
+                (trendsDateRange.value!!.startDate!!.year + i).toString()
             }
 
-            points.add(BudgetGraph.Point(x, y, labels))
+            points.add(BudgetGraph.Point(x, y, label))
         }
 
         return points
