@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2020 Mayank Sindwani
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.msindwan.shoebox.views.dashboard.models
 
 import android.app.Application
@@ -13,6 +28,9 @@ import org.threeten.bp.LocalDate
 import org.threeten.bp.format.DateTimeFormatter
 
 
+/**
+ * Dashboard view shared state model.
+ */
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
     private var dal: DataAccessLayer = DataAccessLayer.getInstance(application)
 
@@ -24,11 +42,11 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         MutableLiveData(loadSearchTransactions())
     }
 
-    private val sumOfTransactions: MutableLiveData<Long> by lazy {
+    private val sumOfRecentTransactions: MutableLiveData<Long> by lazy {
         MutableLiveData(loadSumOfTransactions())
     }
 
-    private val budget: MutableLiveData<Budget?> by lazy {
+    private val currentBudget: MutableLiveData<Budget?> by lazy {
         MutableLiveData(loadBudget())
     }
 
@@ -42,34 +60,67 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private var trendsDateRange: MutableLiveData<LocalDateRange> =
         MutableLiveData(LocalDateRange.currentYear().minusEndMonths(4))
 
-    private var selectedDateRange: LocalDateRange = LocalDateRange.currentMonth()
+    private var recentTransactionsDateRange: LocalDateRange = LocalDateRange.currentMonth()
+
     private var searchLastCreatedDate: Instant? = null
     private var searchOrder: TransactionDAO.Companion.Order =
         TransactionDAO.Companion.Order.DATE_DESC
-
     private var searchFilters: SearchFilters =
         SearchFilters(null, LocalDateRange(null, null), null, null, null)
 
+    /**
+     * Returns a list of recent transactions.
+     *
+     * @returns <LiveData> The list of recent transactions.
+     */
     fun getRecentTransactions(): LiveData<List<Transaction>> {
         return recentTransactions
     }
 
-    fun getSumOfTransactions(): LiveData<Long> {
-        return sumOfTransactions
+    /**
+     * Returns the sum of recent transaction.
+     *
+     * @returns <LiveData> The sum of recent transaction amounts.
+     */
+    fun getSumOfRecentTransactions(): LiveData<Long> {
+        return sumOfRecentTransactions
     }
 
-    fun getBudget(): LiveData<Budget?> {
-        return budget
+    /**
+     * Returns the budget for the current date range.
+     *
+     * @returns <LiveData> The budget for the current date range.
+     */
+    fun getCurrentBudget(): LiveData<Budget?> {
+        return currentBudget
     }
 
+    /**
+     * Returns transactions for the given search criteria.
+     *
+     * @returns <LiveData> Transactions for the current search criteria.
+     */
     fun getSearchTransactions(): LiveData<List<Transaction>> {
         return searchTransactions
     }
 
+    /**
+     * Returns the menu item currently selected.
+     *
+     * @returns <LiveData> The currently selected menu item.
+     */
     fun getCurrentMenuItem(): LiveData<FooterMenu.MenuItem> {
         return currentMenuItem
     }
 
+    /**
+     * Inserts a transaction and updates relevant subscribers.
+     *
+     * @param date {LocalDate} The date of the transaction.
+     * @param title {String} The title of the transaction.
+     * @param category {String} The category of the transaction.
+     * @param amount {Long} The amount of the transaction.
+     */
     fun insertTransaction(date: LocalDate, title: String, category: String, amount: Long) {
         dal.transactionDAO.insertTransaction(date, title, category, amount, Currency.USD)
         updateRecentTransactions()
@@ -78,29 +129,55 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         updateTrends()
     }
 
+    /**
+     * Deletes a transaction and updates relevant subscribers.
+     *
+     * @param transactions {List<Transaction>} The list of transactions to delete.
+     */
     fun deleteTransactions(transactions: List<Transaction>) {
+        // @todo find a way to retain pagination
         dal.transactionDAO.deleteTransactions(transactions)
         updateRecentTransactions()
-        // @todo find a way to retain pagination
         updateSearchTransactions()
         updateSumOfTransactions()
         updateTrends()
     }
 
-    fun insertOrUpdateBudget(month: Int, year: Int, amount: Long, interval: Interval, currency: Currency = Currency.USD) {
+    /**
+     * Inserts or updates a budget and updates relevant subscribers.
+     *
+     * @param month {Int} The month of the budget.
+     * @param year {Int} The year of the budget.
+     * @param amount {Long} The amount of the budget.
+     * @param interval {Interval} The interval of the budget.
+     * @param currency {Currency} The currency of the budget amount.
+     */
+    fun insertOrUpdateBudget(
+        month: Int,
+        year: Int,
+        amount: Long,
+        interval: Interval,
+        currency: Currency = Currency.USD
+    ) {
         dal.budgetDAO.upsertBudget(month, year, interval, amount, currency)
         updateTrends()
         updateBudget()
     }
 
+    /**
+     * Paginates across search transactions and updates relevant subscribers.
+     *
+     * @param limit {Int} The maximum number of results to return in a single search.
+     * @returns {Int} The number of transactions found from the latest cursor.
+     */
     fun nextSearchTransactions(limit: Int): Int {
         val allTransactions = mutableListOf<Transaction>()
         val transactions: List<Transaction>
+        var date = searchFilters.dateRange
         var numTransactions = 0
 
-        var date = searchFilters.dateRange
-
-        if (searchTransactions.value?.size ?: -1 > 0) {
+        if (searchTransactions.value?.isNotEmpty() == true) {
+            // Continue from the last transaction date up until the specified end date.
             numTransactions = searchTransactions.value!!.size
             date = LocalDateRange(
                 searchTransactions.value!!.last().date,
@@ -110,6 +187,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             allTransactions.addAll(searchTransactions.value!!)
         }
 
+        // Fetch new transactions and update the list.
         transactions = dal.transactionDAO.getTransactions(
             SearchFilters(
                 searchFilters.title,
@@ -122,12 +200,16 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             searchOrder,
             limit
         )
-
         allTransactions.addAll(transactions)
         searchTransactions.value = allTransactions.distinct()
+
+        // Return the number of transactions returned excluding duplicates.
         return allTransactions.size - numTransactions
     }
 
+    /**
+     * Sets the current menu item and updates relevant subscribers.
+     */
     fun setCurrentMenuItem(menuItem: FooterMenu.MenuItem) {
         currentMenuItem.value = menuItem
     }
@@ -143,22 +225,47 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         return searchFilters.copy()
     }
 
+    fun getBudgetGraph(): LiveData<List<BudgetGraph.Point>> {
+        return budgetGraph
+    }
+
+    fun getTrendsDateRange(): LiveData<LocalDateRange> {
+        return trendsDateRange
+    }
+
+    fun setTrendsDateRange(dateRange: LocalDateRange) {
+        trendsDateRange.value = dateRange
+        updateTrends()
+    }
+
+    private fun updateBudget() {
+        currentBudget.value = loadBudget()
+    }
+
+    private fun updateRecentTransactions() {
+        recentTransactions.value = loadRecentTransactions()
+    }
+
+    private fun updateSearchTransactions() {
+        searchTransactions.value = loadSearchTransactions()
+    }
+
+    private fun updateSumOfTransactions() {
+        sumOfRecentTransactions.value = loadSumOfTransactions()
+    }
+
+    private fun updateTrends() {
+        budgetGraph.value = loadBudgetGraph()
+    }
+
     private fun loadRecentTransactions(): List<Transaction> {
-        val filters = SearchFilters(null, selectedDateRange, null, null, null)
+        val filters = SearchFilters(null, recentTransactionsDateRange, null, null, null)
         return dal.transactionDAO.getTransactions(
             filters,
             null,
             TransactionDAO.Companion.Order.DATE_DESC,
             4
         )
-    }
-
-    private fun updateBudget() {
-        budget.value = loadBudget()
-    }
-
-    private fun updateRecentTransactions() {
-        recentTransactions.value = loadRecentTransactions()
     }
 
     private fun loadSearchTransactions(): List<Transaction> {
@@ -170,24 +277,12 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         )
     }
 
-    private fun updateSearchTransactions() {
-        searchTransactions.value = loadSearchTransactions()
-    }
-
-    private fun updateSumOfTransactions() {
-        sumOfTransactions.value = loadSumOfTransactions()
-    }
-
-    private fun updateTrends() {
-        budgetGraph.value = loadBudgetGraph()
-    }
-
     private fun loadBudget(): Budget? {
-        return dal.budgetDAO.getBudgets(selectedDateRange).getOrNull(0)
+        return dal.budgetDAO.getBudgets(recentTransactionsDateRange).getOrNull(0)
     }
 
     private fun loadSumOfTransactions(): Long {
-        val sums = dal.transactionDAO.getSumOfTransactions(selectedDateRange)
+        val sums = dal.transactionDAO.getSumOfTransactions(recentTransactionsDateRange)
         if (sums.isNotEmpty()) {
             return sums[0].amount
         }
@@ -242,18 +337,5 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
         return points
-    }
-
-    fun getBudgetGraph(): LiveData<List<BudgetGraph.Point>> {
-        return budgetGraph
-    }
-
-    fun getTrendsDateRange(): LiveData<LocalDateRange> {
-        return trendsDateRange
-    }
-
-    fun setTrendsDateRange(dateRange: LocalDateRange) {
-        trendsDateRange.value = dateRange
-        updateTrends()
     }
 }

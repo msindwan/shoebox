@@ -22,9 +22,9 @@
 
         <com.msindwan.shoebox.widgets.Gauge
             android:id="@+id/dashboard_home_gauge_budget"
-            android:layout_gravity="center"
             android:layout_width="250dp"
-            android:layout_height="250dp" />
+            android:layout_height="250dp"
+            android:layout_gravity="center" />
 
         <TextView
             android:layout_width="match_parent"

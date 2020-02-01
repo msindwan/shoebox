@@ -71,7 +71,6 @@ class TransactionListView : LinearLayout {
          * Initializes the view.
          */
         private fun setup() {
-            // @todo: Merge attribute overrides.
             orientation = VERTICAL
             layoutParams = LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,

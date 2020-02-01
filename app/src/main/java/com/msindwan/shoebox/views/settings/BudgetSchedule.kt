@@ -28,7 +28,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.msindwan.shoebox.R
@@ -101,7 +101,7 @@ class BudgetSchedule : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = resources.getString(R.string.budget_schedule)
 
-        settingsModel = ViewModelProviders.of(this).get(SettingsViewModel::class.java)
+        settingsModel = ViewModelProvider(this).get(SettingsViewModel::class.java)
         settingsModel.getBudgetScheduleYear().observe(this, Observer { update() })
         settingsModel.getBudgetScheduleMonth().observe(this, Observer { update() })
         settingsModel.getMonthlyBudgets().observe(this, Observer { update() })

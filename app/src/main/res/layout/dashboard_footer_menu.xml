@@ -3,23 +3,26 @@
 
     <LinearLayout
         android:id="@+id/dashboard_footer_menu_btn_home"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:background="@android:color/white"
+        android:background="?android:attr/selectableItemBackground"
         android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
         <ImageView
-            android:contentDescription="@string/home"
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:layout_gravity="center"
-            android:background="@drawable/ic_house_icon" />
+            android:background="@drawable/ic_house_icon"
+            android:contentDescription="@string/home" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:paddingTop="3dp"
             android:text="@string/home"
             android:textSize="12sp" />
@@ -28,72 +31,83 @@
 
     <LinearLayout
         android:id="@+id/dashboard_footer_menu_btn_txns"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:background="@android:color/white"
+        android:background="?android:attr/selectableItemBackground"
         android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
         <ImageView
-            android:contentDescription="@string/transactions"
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:layout_gravity="center"
-            android:background="@drawable/ic_transaction_inactive_icon" />
+            android:background="@drawable/ic_transaction_inactive_icon"
+            android:contentDescription="@string/transactions" />
 
         <TextView
-            android:text="@string/transactions"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:paddingTop="3dp"
+            android:text="@string/transactions"
             android:textSize="12sp" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/dashboard_footer_menu_btn_add"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:background="@android:color/white"
+        android:background="?android:attr/selectableItemBackground"
         android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
         <ImageView
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:layout_gravity="center"
-            android:background="@drawable/ic_plus_inactive_icon" />
+            android:background="@drawable/ic_plus_inactive_icon"
+            android:contentDescription="@string/add" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:paddingTop="3dp"
-            android:text="Add"
-            android:textSize="11dp" />
+            android:text="@string/add"
+            android:textSize="12sp" />
 
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/dashboard_footer_menu_btn_trends"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:background="@android:color/white"
+        android:background="?android:attr/selectableItemBackground"
         android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
         <ImageView
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:layout_gravity="center"
-            android:background="@drawable/ic_activity_inactive_icon" />
+            android:background="@drawable/ic_bar_chart_inactive_24px"
+            android:contentDescription="@string/trends" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:paddingTop="3dp"
-            android:text="Trends"
+            android:text="@string/trends"
             android:textSize="12sp" />
 
     </LinearLayout>

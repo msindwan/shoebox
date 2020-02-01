@@ -115,6 +115,8 @@ class TransactionFilterPanel : LinearLayout {
 
     /**
      * Sets the filters for the panel.
+     *
+     * @param searchFilters {SearchFilters} The initial filters to set.
      */
     fun setFilters(searchFilters: SearchFilters) {
         var numFilters = 0

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.msindwan.shoebox.views.dashboard.fragments
 
 import android.content.Intent
@@ -27,7 +26,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.msindwan.shoebox.helpers.ActivityHelpers
 import com.msindwan.shoebox.views.dashboard.components.FooterMenu
 import com.msindwan.shoebox.views.dashboard.components.TransactionListView
@@ -43,12 +42,11 @@ import java.util.*
  */
 class DashboardHome : Fragment() {
 
-    private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
     private lateinit var dashboardModel: DashboardViewModel
 
-    private var dashboardHomeGaugeBudget: Gauge? = null
-    private var dashboardHomeLstTxns: TransactionListView? = null
-    private var dashboardHomeBtnAddTxn: Button? = null
+    private var gaugeBudget: Gauge? = null
+    private var lstTxns: TransactionListView? = null
+    private var btnAddTxn: Button? = null
     private var defaultGaugeRemainingTextColor: ColorStateList? = null
 
     override fun onCreateView(
@@ -68,60 +66,63 @@ class DashboardHome : Fragment() {
      * Initializes the view.
      */
     fun setup(view: View) {
-        dashboardHomeGaugeBudget = view.findViewById(R.id.dashboard_home_gauge_budget)
-        defaultGaugeRemainingTextColor = dashboardHomeGaugeBudget?.remainingTextColors
-        dashboardHomeLstTxns = view.findViewById(R.id.dashboard_home_lst_transactions)
-        dashboardHomeLstTxns?.setViewMoreClickListener(onViewMoreTransactionsClicked)
+        gaugeBudget = view.findViewById(R.id.dashboard_home_gauge_budget)
+        defaultGaugeRemainingTextColor = gaugeBudget?.remainingTextColors
+        lstTxns = view.findViewById(R.id.dashboard_home_lst_transactions)
+        lstTxns?.setViewMoreClickListener(onViewMoreTransactionsClicked)
 
-        dashboardHomeBtnAddTxn = view.findViewById(R.id.dashboard_home_btn_add_transaction)
-        dashboardHomeBtnAddTxn?.setOnClickListener(onNewTransactionClicked)
+        btnAddTxn = view.findViewById(R.id.dashboard_home_btn_add_transaction)
+        btnAddTxn?.setOnClickListener(onNewTransactionClicked)
 
-        dashboardModel = ViewModelProviders.of(activity!!).get(DashboardViewModel::class.java)
+        dashboardModel = ViewModelProvider(activity!!).get(DashboardViewModel::class.java)
         dashboardModel.getRecentTransactions().observe(viewLifecycleOwner, Observer { update() })
-        dashboardModel.getBudget().observe(viewLifecycleOwner, Observer { update() })
-        dashboardModel.getSumOfTransactions().observe(viewLifecycleOwner, Observer { update() })
+        dashboardModel.getCurrentBudget().observe(viewLifecycleOwner, Observer { update() })
+        dashboardModel.getSumOfRecentTransactions()
+            .observe(viewLifecycleOwner, Observer { update() })
     }
 
     /**
      * Updates the view based on the view model state.
      */
     private fun update() {
-        val totalBudget = dashboardModel.getBudget().value!!.amount / 100F
-        val remainingBudget = totalBudget - (dashboardModel.getSumOfTransactions().value!! / 100F)
+        val totalBudget = dashboardModel.getCurrentBudget().value!!.amount / 100F
+        val remainingBudget =
+            totalBudget - (dashboardModel.getSumOfRecentTransactions().value!! / 100F)
         val budgetPercentage = remainingBudget / totalBudget
+        val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
 
-        dashboardHomeGaugeBudget?.remainingText?.text = currencyFormatter.format(remainingBudget)
+        gaugeBudget?.remainingText?.text = currencyFormatter.format(remainingBudget)
 
-        dashboardHomeGaugeBudget?.setGaugeText(
+        gaugeBudget?.setGaugeText(
             currencyFormatter.format(remainingBudget),
             currencyFormatter.format(totalBudget)
         )
 
         // @todo Make constants out of colors
         if (remainingBudget <= 0) {
-            dashboardHomeGaugeBudget?.setRemainingTextColor(Color.parseColor("#E28080"))
+            gaugeBudget?.setRemainingTextColor(Color.parseColor("#E28080"))
         } else {
-            dashboardHomeGaugeBudget?.setRemainingTextColor(defaultGaugeRemainingTextColor)
+            gaugeBudget?.setRemainingTextColor(defaultGaugeRemainingTextColor)
         }
         when {
-            budgetPercentage > 0.5F -> dashboardHomeGaugeBudget?.setProgressBarColor(
+            budgetPercentage > 0.5F -> gaugeBudget?.setProgressBarColor(
                 Color.parseColor(
                     "#87D6B9"
                 )
             )
-            budgetPercentage > 0.3F -> dashboardHomeGaugeBudget?.setProgressBarColor(
+            budgetPercentage > 0.3F -> gaugeBudget?.setProgressBarColor(
                 Color.parseColor(
                     "#EDE575"
                 )
             )
-            else -> dashboardHomeGaugeBudget?.setProgressBarColor(Color.parseColor("#E28080"))
+            else -> gaugeBudget?.setProgressBarColor(Color.parseColor("#E28080"))
         }
 
-        dashboardHomeGaugeBudget?.setPercent(budgetPercentage)
+        gaugeBudget?.setPercent(budgetPercentage)
 
-        dashboardHomeLstTxns?.showViewMoreButton(dashboardModel.getRecentTransactions().value?.size ?: -1 >= 4)
-        dashboardHomeLstTxns?.setTransactionsList(dashboardModel.getRecentTransactions().value!!)
-        dashboardHomeLstTxns?.setOnDeleteTransactions {
+        lstTxns?.showViewMoreButton(dashboardModel.getRecentTransactions().value?.size ?: -1 >= 4)
+        lstTxns?.setTransactionsList(dashboardModel.getRecentTransactions().value!!)
+        lstTxns?.setOnDeleteTransactions {
             dashboardModel.deleteTransactions(it)
         }
     }

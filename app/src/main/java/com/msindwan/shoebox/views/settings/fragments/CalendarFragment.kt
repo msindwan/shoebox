@@ -26,7 +26,7 @@ import android.widget.*
 import com.msindwan.shoebox.R
 import android.util.TypedValue
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.msindwan.shoebox.data.entities.LocalDateRange
 import com.msindwan.shoebox.views.settings.models.SettingsViewModel
 import org.threeten.bp.LocalDate
@@ -152,7 +152,7 @@ class ScheduleCalendarFragment : Fragment() {
             view.addView(row)
         }
 
-        settingsModel = ViewModelProviders.of(activity!!).get(SettingsViewModel::class.java)
+        settingsModel = ViewModelProvider(activity!!).get(SettingsViewModel::class.java)
         settingsModel.getBudgetScheduleMonth().observe(viewLifecycleOwner, Observer { update() })
         settingsModel.getMonthlyBudgets().observe(viewLifecycleOwner, Observer { update() })
     }

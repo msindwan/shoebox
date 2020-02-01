@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.msindwan.shoebox.views.dashboard
 
 import android.content.Intent
@@ -29,7 +28,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.msindwan.shoebox.data.entities.Interval
@@ -53,6 +52,7 @@ class Dashboard : AppCompatActivity() {
     private var dashboardViewPager: ViewPager2? = null
     private var actionBarParent: Toolbar? = null
     private var actionBarTitle: TextView? = null
+
     private lateinit var dashboardModel: DashboardViewModel
 
     /**
@@ -137,7 +137,7 @@ class Dashboard : AppCompatActivity() {
         supportActionBar!!.setDisplayShowCustomEnabled(true)
         supportActionBar!!.setCustomView(R.layout.action_bar)
 
-        dashboardModel = ViewModelProviders.of(this).get(DashboardViewModel::class.java)
+        dashboardModel = ViewModelProvider(this).get(DashboardViewModel::class.java)
         dashboardModel.getCurrentMenuItem().observe(this, Observer { onMenuButtonClickHandler(it) })
 
         actionBarParent = supportActionBar?.customView?.parent as Toolbar

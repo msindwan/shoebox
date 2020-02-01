@@ -49,6 +49,7 @@
     <string name="budget">Budget</string>
     <string name="repeat">Repeat</string>
     <string name="update">Update</string>
+    <string name="add">Add</string>
     <plurals name="applied_filters">
         <item quantity="one">%d filter applied</item>
         <item quantity="other">%d filters applied</item>
