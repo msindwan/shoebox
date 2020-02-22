@@ -40,7 +40,8 @@ import com.msindwan.shoebox.views.dashboard.fragments.DashboardTrendsFragment
 import com.msindwan.shoebox.views.dashboard.models.DashboardViewModel
 import com.msindwan.shoebox.views.settings.BudgetSchedule
 import com.msindwan.shoebox.views.transactions.NewTransaction
-import org.threeten.bp.LocalDate
+import org.threeten.bp.OffsetDateTime
+import org.threeten.bp.ZoneId
 
 
 /**
@@ -104,13 +105,15 @@ class Dashboard : AppCompatActivity() {
             resultCode == ActivityHelpers.NEW_TRANSACTION_SUCCESS_RESPONSE_CODE &&
             data != null
         ) {
-            val date = data.getLongExtra("date", 0L)
+            val date = data.getStringExtra("date")
+            val zoneId = data.getStringExtra("zoneId")
             val title = data.getStringExtra("title")
             val category = data.getStringExtra("category")
             val amount = data.getLongExtra("amount", 0L)
 
             dashboardModel.insertTransaction(
-                LocalDate.ofEpochDay(date),
+                OffsetDateTime.parse(date),
+                ZoneId.of(zoneId),
                 title!!,
                 category!!,
                 amount
@@ -138,7 +141,7 @@ class Dashboard : AppCompatActivity() {
         supportActionBar!!.setCustomView(R.layout.action_bar)
 
         dashboardModel = ViewModelProvider(this).get(DashboardViewModel::class.java)
-        dashboardModel.getCurrentMenuItem().observe(this, Observer { onMenuButtonClickHandler(it) })
+        dashboardModel.getCurrentMenuItem().observe(this, Observer { setFooterMenuItem(it) })
 
         actionBarParent = supportActionBar?.customView?.parent as Toolbar
         actionBarTitle = actionBarParent?.findViewById(R.id.action_bar_txt_title)
@@ -158,9 +161,9 @@ class Dashboard : AppCompatActivity() {
     }
 
     /**
-     * Handles clicking different menu buttons.
+     * Sets the active footer menu item.
      */
-    private val onMenuButtonClickHandler = fun(menuItem: FooterMenu.MenuItem) {
+    private val setFooterMenuItem = fun(menuItem: FooterMenu.MenuItem) {
         when (menuItem) {
             FooterMenu.MenuItem.TRANSACTIONS -> {
                 actionBarTitle?.text = resources.getString(R.string.transactions)
@@ -184,5 +187,12 @@ class Dashboard : AppCompatActivity() {
                 dashboardFooterMenu?.setActiveMenuItem(menuItem)
             }
         }
+    }
+
+    /**
+     * Handles clicking different menu buttons.
+     */
+    private val onMenuButtonClickHandler = fun(menuItem: FooterMenu.MenuItem) {
+        dashboardModel.setCurrentMenuItem(menuItem)
     }
 }

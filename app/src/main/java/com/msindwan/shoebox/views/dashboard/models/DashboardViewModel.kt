@@ -23,9 +23,10 @@ import com.msindwan.shoebox.data.dao.TransactionDAO
 import com.msindwan.shoebox.data.entities.*
 import com.msindwan.shoebox.views.dashboard.components.FooterMenu
 import com.msindwan.shoebox.views.dashboard.components.BudgetGraph
-import org.threeten.bp.Instant
-import org.threeten.bp.LocalDate
+import org.threeten.bp.OffsetDateTime
+import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeFormatter
+import org.threeten.bp.temporal.ChronoUnit
 
 
 /**
@@ -57,16 +58,15 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         MutableLiveData(loadBudgetGraph())
     }
 
-    private var trendsDateRange: MutableLiveData<LocalDateRange> =
-        MutableLiveData(LocalDateRange.currentYear().minusEndMonths(4))
+    private var trendsDateRange: MutableLiveData<OffsetDateTimeRange> =
+        MutableLiveData(OffsetDateTimeRange.currentYear().minusEnd(4, ChronoUnit.MONTHS))
 
-    private var recentTransactionsDateRange: LocalDateRange = LocalDateRange.currentMonth()
+    private var recentTransactionsDateRange: OffsetDateTimeRange = OffsetDateTimeRange.currentMonth()
 
-    private var searchLastCreatedDate: Instant? = null
     private var searchOrder: TransactionDAO.Companion.Order =
         TransactionDAO.Companion.Order.DATE_DESC
     private var searchFilters: SearchFilters =
-        SearchFilters(null, LocalDateRange(null, null), null, null, null)
+        SearchFilters(null, OffsetDateTimeRange(null, null), null, null, null)
 
     /**
      * Returns a list of recent transactions.
@@ -116,13 +116,14 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     /**
      * Inserts a transaction and updates relevant subscribers.
      *
-     * @param date {LocalDate} The date of the transaction.
+     * @param date {OffsetDateTime} The date of the transaction.
+     * @param zoneId {ZoneId} The timezone of the transaction.
      * @param title {String} The title of the transaction.
      * @param category {String} The category of the transaction.
      * @param amount {Long} The amount of the transaction.
      */
-    fun insertTransaction(date: LocalDate, title: String, category: String, amount: Long) {
-        dal.transactionDAO.insertTransaction(date, title, category, amount, Currency.USD)
+    fun insertTransaction(date: OffsetDateTime, zoneId: ZoneId, title: String, category: String, amount: Long) {
+        dal.transactionDAO.insertTransaction(date, zoneId, title, category, amount, Currency.USD)
         updateRecentTransactions()
         updateSearchTransactions()
         updateSumOfTransactions()
@@ -179,11 +180,10 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         if (searchTransactions.value?.isNotEmpty() == true) {
             // Continue from the last transaction date up until the specified end date.
             numTransactions = searchTransactions.value!!.size
-            date = LocalDateRange(
+            date = OffsetDateTimeRange(
                 searchTransactions.value!!.last().date,
                 searchFilters.dateRange.endDate
             )
-            searchLastCreatedDate = searchTransactions.value!!.last().date_created
             allTransactions.addAll(searchTransactions.value!!)
         }
 
@@ -196,7 +196,6 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 searchFilters.maxAmount,
                 searchFilters.category
             ),
-            searchLastCreatedDate,
             searchOrder,
             limit
         )
@@ -209,11 +208,18 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     /**
      * Sets the current menu item and updates relevant subscribers.
+     *
+     * @param menuItem {FooterMenu.MenuItem} The menu item to set.
      */
     fun setCurrentMenuItem(menuItem: FooterMenu.MenuItem) {
         currentMenuItem.value = menuItem
     }
 
+    /**
+     * Sets the search transaction filters and updates relevant subscribers.
+     *
+     * @param filters {SearchFilters} The filters to set.
+     */
     fun setSearchTransactionsFilters(filters: SearchFilters) {
         if (filters != searchFilters) {
             searchFilters = filters
@@ -229,11 +235,11 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         return budgetGraph
     }
 
-    fun getTrendsDateRange(): LiveData<LocalDateRange> {
+    fun getTrendsDateRange(): LiveData<OffsetDateTimeRange> {
         return trendsDateRange
     }
 
-    fun setTrendsDateRange(dateRange: LocalDateRange) {
+    fun setTrendsDateRange(dateRange: OffsetDateTimeRange) {
         trendsDateRange.value = dateRange
         updateTrends()
     }
@@ -262,7 +268,6 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         val filters = SearchFilters(null, recentTransactionsDateRange, null, null, null)
         return dal.transactionDAO.getTransactions(
             filters,
-            null,
             TransactionDAO.Companion.Order.DATE_DESC,
             4
         )
@@ -271,7 +276,6 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private fun loadSearchTransactions(): List<Transaction> {
         return dal.transactionDAO.getTransactions(
             searchFilters,
-            null,
             searchOrder,
             100
         )
@@ -293,7 +297,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         val groupTxnSumsBy: TransactionDAO.Companion.GroupTransactionSums
         val groupBudgetsBy: BudgetDAO.Companion.GroupBudgets
 
-        if (trendsDateRange.value!!.period.years > 1) {
+        if (trendsDateRange.value!!.years > 1) {
             groupTxnSumsBy = TransactionDAO.Companion.GroupTransactionSums.YEAR
             groupBudgetsBy = BudgetDAO.Companion.GroupBudgets.YEAR
         } else {

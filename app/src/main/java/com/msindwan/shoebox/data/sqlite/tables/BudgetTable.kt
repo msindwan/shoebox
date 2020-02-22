@@ -22,8 +22,9 @@ import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import com.msindwan.shoebox.data.entities.Currency
 import com.msindwan.shoebox.data.entities.Interval
-import com.msindwan.shoebox.data.entities.LocalDateRange
+import com.msindwan.shoebox.data.entities.OffsetDateTimeRange
 import org.threeten.bp.Instant
+import org.threeten.bp.temporal.ChronoUnit
 
 
 /**
@@ -57,7 +58,7 @@ class BudgetTable(private val dbHelper: SQLiteDatabaseHelper) : BudgetDAO {
     }
 
     override fun getBudgets(
-        dateRange: LocalDateRange,
+        dateRange: OffsetDateTimeRange,
         groupBy: BudgetDAO.Companion.GroupBudgets
     ): List<Budget?> {
         val budgets: MutableList<Budget> = mutableListOf()
@@ -81,7 +82,7 @@ class BudgetTable(private val dbHelper: SQLiteDatabaseHelper) : BudgetDAO {
             """
                 CASE 
                     WHEN $COL_YEAR = ? and $COL_YEAR = ?
-                        THEN $COL_MONTH >= ? AND ($COL_MONTH <= ? OR $COL_INTERVAL = 'M')
+                        THEN ($COL_MONTH >= ? AND $COL_MONTH <= ?) OR ($COL_MONTH < ? AND $COL_INTERVAL = 'M')
                     WHEN $COL_YEAR = ?
                         THEN $COL_MONTH >= ? OR $COL_INTERVAL = 'M'
                     WHEN $COL_YEAR = ?
@@ -95,7 +96,7 @@ class BudgetTable(private val dbHelper: SQLiteDatabaseHelper) : BudgetDAO {
                     ELSE 0
                 END
             """.trimIndent(),
-            arrayOf(y1, y2, m1, m2, y1, m1, y2, m2, y1, y1, y2, y2, y2, y1, m1, m2),
+            arrayOf(y1, y2, m1, m2, m1, y1, m1, y2, m2, y1, y1, y2, y2, y2, y1, m1, m2),
             null,
             null,
             "$COL_DATE_LAST_UPDATED DESC"
@@ -127,7 +128,7 @@ class BudgetTable(private val dbHelper: SQLiteDatabaseHelper) : BudgetDAO {
         val groupedBudgets: MutableList<Budget?> = mutableListOf()
 
         for (i in 0 until dateRange.months) {
-            val month = dateRange.startDate.plusMonths(i.toLong())
+            val month = dateRange.startDate.plus(i, ChronoUnit.MONTHS)
             val budget = budgets.find { b -> b.isApplicableToDate(month) }?.copyForDate(month)
 
             if (groupBy == BudgetDAO.Companion.GroupBudgets.MONTH) {

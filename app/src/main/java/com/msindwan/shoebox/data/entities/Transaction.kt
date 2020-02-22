@@ -16,16 +16,19 @@
 package com.msindwan.shoebox.data.entities
 
 import org.threeten.bp.Instant
-import org.threeten.bp.LocalDate
+import org.threeten.bp.OffsetDateTime
+import org.threeten.bp.ZoneId
+
 
 data class Transaction(
     val id: ByteArray,
-    val date: LocalDate,
+    val date: OffsetDateTime,
+    val zoneId: ZoneId,
     val title: String?,
     val category: String?,
     val amount: Long,
     val currency: Currency,
-    val date_created: Instant
+    val timestampCreated: Instant
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

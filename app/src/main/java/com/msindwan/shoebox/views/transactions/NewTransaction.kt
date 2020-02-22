@@ -21,11 +21,12 @@ import android.widget.Button
 import android.widget.EditText
 import com.msindwan.shoebox.R
 import com.msindwan.shoebox.widgets.CurrencyInput
-import com.msindwan.shoebox.widgets.DateInput
+import com.msindwan.shoebox.widgets.DateTimeInput
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
 import com.msindwan.shoebox.helpers.ActivityHelpers
+import org.threeten.bp.ZoneId
 
 
 /**
@@ -33,10 +34,11 @@ import com.msindwan.shoebox.helpers.ActivityHelpers
  */
 class NewTransaction : AppCompatActivity() {
 
+    private lateinit var zoneId: ZoneId
     private var txtCategory: EditText? = null
     private var txtAmount: CurrencyInput? = null
     private var txtTitle: EditText? = null
-    private var txtDate: DateInput? = null
+    private var txtDate: DateTimeInput? = null
     private var btnAddTxn: Button? = null
     private var btnCancel: Button? = null
 
@@ -70,6 +72,7 @@ class NewTransaction : AppCompatActivity() {
 
         btnAddTxn?.setOnClickListener(onAddClicked)
         btnCancel?.setOnClickListener(onCancelClicked)
+        zoneId = ZoneId.systemDefault()
     }
 
     /**
@@ -94,10 +97,11 @@ class NewTransaction : AppCompatActivity() {
                 category = resources.getString(R.string.misc)
             }
 
-            val date: Long = txtDate!!.date!!.toEpochDay()
+            val date = txtDate!!.date!!.atZone(zoneId).toOffsetDateTime().toString()
 
             val intent = Intent()
             intent.putExtra("date", date)
+            intent.putExtra("zoneId", zoneId.id)
             intent.putExtra("title", title)
             intent.putExtra("category", category)
             intent.putExtra("amount", amount)

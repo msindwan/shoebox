@@ -84,7 +84,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
                 android:layout_marginLeft="5dp"
-                android:layout_weight="1.5"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <TextView
@@ -98,12 +98,13 @@
                     android:textSize="14sp"
                     app:fontFamily="@font/staatliches_font_family" />
 
-                <com.msindwan.shoebox.widgets.DateInput
+                <com.msindwan.shoebox.widgets.DateTimeInput
                     android:id="@+id/new_transaction_txt_date"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/input_background"
-                    android:padding="10dp" />
+                    android:paddingRight="10dp"
+                    android:paddingLeft="10dp" />
 
             </LinearLayout>
 

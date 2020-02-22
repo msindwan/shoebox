@@ -16,7 +16,7 @@
 package com.msindwan.shoebox.data.entities
 
 import org.threeten.bp.Instant
-import org.threeten.bp.LocalDate
+import org.threeten.bp.OffsetDateTime
 
 data class Budget(
     var month: Int,
@@ -32,7 +32,7 @@ data class Budget(
      * @param date {LocalDate} The date to check the budget against.
      * @returns True if the budget applies to the date; false otherwise.
      */
-    fun isApplicableToDate(date: LocalDate): Boolean {
+    fun isApplicableToDate(date: OffsetDateTime): Boolean {
         val matchesExactDate = month == date.monthValue && year == date.year
         val matchesYear = month == date.monthValue && interval == Interval.Y
         val matchesMonth = (date.monthValue > month || date.year > year) && interval == Interval.M
@@ -46,7 +46,7 @@ data class Budget(
      * @param date {LocalDate} The date to update the budget with.
      * @returns A copy of the existing budget with the new date.
      */
-    fun copyForDate(date: LocalDate): Budget? {
+    fun copyForDate(date: OffsetDateTime): Budget? {
         return Budget(
             date.monthValue,
             date.year,

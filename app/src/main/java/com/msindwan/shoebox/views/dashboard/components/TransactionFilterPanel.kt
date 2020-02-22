@@ -23,9 +23,10 @@ import androidx.fragment.app.FragmentManager
 import com.crystal.crystalrangeseekbar.interfaces.OnRangeSeekbarChangeListener
 import com.crystal.crystalrangeseekbar.widgets.CrystalRangeSeekbar
 import com.msindwan.shoebox.R
-import com.msindwan.shoebox.data.entities.LocalDateRange
+import com.msindwan.shoebox.data.entities.OffsetDateTimeRange
 import com.msindwan.shoebox.data.entities.SearchFilters
-import com.msindwan.shoebox.widgets.DateInput
+import com.msindwan.shoebox.widgets.DateTimeInput
+import org.threeten.bp.OffsetDateTime
 import java.text.NumberFormat
 import java.util.*
 
@@ -40,8 +41,8 @@ class TransactionFilterPanel : LinearLayout {
     private var filterAmount: CrystalRangeSeekbar? = null
     private var filterAmountMin: TextView? = null
     private var filterAmountMax: TextView? = null
-    private var filterFrom: DateInput? = null
-    private var filterTo: DateInput? = null
+    private var filterFrom: DateTimeInput? = null
+    private var filterTo: DateTimeInput? = null
     private var filterCount: TextView? = null
     private var filterNoStartDate: TextView? = null
     private var filterNoEndDate: TextView? = null
@@ -144,8 +145,8 @@ class TransactionFilterPanel : LinearLayout {
 
         filterTitle?.setText(searchFilters.title)
         filterCategory?.setText(searchFilters.category)
-        filterFrom?.date = startDate
-        filterTo?.date = endDate
+        filterFrom?.date = startDate?.toLocalDateTime()
+        filterTo?.date = endDate?.toLocalDateTime()
         setAmountRange(
             searchFilters.minAmount?.div(100) ?: MIN_FILTER_AMOUNT,
             searchFilters.maxAmount?.div(100) ?: MAX_FILTER_AMOUNT
@@ -225,7 +226,10 @@ class TransactionFilterPanel : LinearLayout {
 
         val filters = SearchFilters(
             title,
-            LocalDateRange(from, to),
+            OffsetDateTimeRange(
+                from?.atOffset(OffsetDateTime.now().offset),
+                to?.atOffset(OffsetDateTime.now().offset)
+            ),
             minAmount,
             maxAmount,
             category
@@ -253,7 +257,7 @@ class TransactionFilterPanel : LinearLayout {
     private val onResetFiltersClicked = OnClickListener {
         val filters = SearchFilters(
             null,
-            LocalDateRange(null, null),
+            OffsetDateTimeRange(null, null),
             null,
             null,
             null

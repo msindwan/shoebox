@@ -27,7 +27,7 @@ import com.msindwan.shoebox.R
 import android.util.TypedValue
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.msindwan.shoebox.data.entities.LocalDateRange
+import com.msindwan.shoebox.data.entities.OffsetDateTimeRange
 import com.msindwan.shoebox.views.settings.models.SettingsViewModel
 import org.threeten.bp.LocalDate
 import org.threeten.bp.format.DateTimeFormatter
@@ -127,7 +127,7 @@ class ScheduleCalendarFragment : Fragment() {
         )
         view.orientation = LinearLayout.VERTICAL
 
-        val currentYear = LocalDateRange.currentYear()
+        val currentYear = OffsetDateTimeRange.currentYear()
 
         // Create month items across N rows
         for (i in 1..4) {
@@ -174,7 +174,7 @@ class ScheduleCalendarFragment : Fragment() {
                     col.budget?.text = getString(R.string.no_budget)
                 }
 
-                val isEnabled = year >= now.year || (year == now.year && (i + 1) >= now.monthValue)
+                val isEnabled = year > now.year || (year == now.year && (i + 1) >= now.monthValue)
                 col.isSelected = isEnabled && i == month - 1
                 col.isEnabled = isEnabled
             }

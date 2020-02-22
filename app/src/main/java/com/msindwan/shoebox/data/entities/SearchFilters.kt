@@ -17,7 +17,7 @@ package com.msindwan.shoebox.data.entities
 
 data class SearchFilters(
     var title: String?,
-    var dateRange: LocalDateRange,
+    var dateRange: OffsetDateTimeRange,
     var minAmount: Int?,
     var maxAmount: Int?,
     var category: String?

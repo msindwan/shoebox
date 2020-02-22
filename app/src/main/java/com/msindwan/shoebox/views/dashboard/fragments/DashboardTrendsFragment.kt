@@ -26,12 +26,12 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.msindwan.shoebox.R
-import com.msindwan.shoebox.data.entities.LocalDateRange
+import com.msindwan.shoebox.data.entities.OffsetDateTimeRange
 import com.msindwan.shoebox.views.dashboard.models.DashboardViewModel
 import com.msindwan.shoebox.views.dashboard.components.BudgetGraph
 import com.msindwan.shoebox.widgets.ButtonToggleGroup
-import org.threeten.bp.Period
 import org.threeten.bp.format.DateTimeFormatter
+import org.threeten.bp.temporal.ChronoUnit
 import java.text.NumberFormat
 import java.util.*
 
@@ -81,10 +81,11 @@ class DashboardTrendsFragment : Fragment() {
     private fun update() {
         budgetGraph?.data = dashboardModel.getBudgetGraph().value
         val totalBudget = dashboardModel.getBudgetGraph().value!!.sumBy { it.budget.toInt() } / 100F
-        val remainingBudget = totalBudget - dashboardModel.getBudgetGraph().value!!.sumBy { it.amount.toInt() } / 100F
+        val remainingBudget =
+            totalBudget - dashboardModel.getBudgetGraph().value!!.sumBy { it.amount.toInt() } / 100F
         val dateRange = dashboardModel.getTrendsDateRange().value!!
 
-        if (Period.between(dateRange.startDate, dateRange.endDate?.plusDays(1)).years > 1) {
+        if (dateRange.years > 1) {
             selectedView?.setSelectedButton("Yearly")
         } else {
             selectedView?.setSelectedButton("Monthly")
@@ -98,14 +99,15 @@ class DashboardTrendsFragment : Fragment() {
             remainingBudgetTxt?.setTextColor(Color.parseColor("#3CC28D"))
         }
 
-        dateRangeTxt?.text = "From ${monthF.format(dateRange.startDate)} - ${monthF.format(dateRange.endDate)}"
+        dateRangeTxt?.text =
+            "From ${monthF.format(dateRange.startDate)} - ${monthF.format(dateRange.endDate)}"
     }
 
-    private val onDateRangeChanged = fun (view: View) {
+    private val onDateRangeChanged = fun(view: View) {
         val dateRange = if (view.tag == "Monthly") {
-            LocalDateRange.currentYear().minusEndMonths(4)
+            OffsetDateTimeRange.currentYear().minusEnd(4, ChronoUnit.MONTHS)
         } else {
-            LocalDateRange.currentYear().plusEndYears(7)
+            OffsetDateTimeRange.currentYear().plusEnd(7, ChronoUnit.YEARS)
         }
         dashboardModel.setTrendsDateRange(dateRange)
     }

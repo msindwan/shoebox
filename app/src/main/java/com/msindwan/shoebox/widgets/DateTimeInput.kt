@@ -17,35 +17,34 @@ package com.msindwan.shoebox.widgets
 
 import android.app.DatePickerDialog
 import android.app.Dialog
+import android.app.TimePickerDialog
 import android.content.Context
 import android.os.Bundle
+import android.text.InputType
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.ViewGroup
-import android.widget.DatePicker
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import com.msindwan.shoebox.R
-import org.threeten.bp.LocalDate
+import org.threeten.bp.LocalDateTime
 import org.threeten.bp.format.DateTimeFormatter
 
 
 /**
  * Input with a date picker trigger.
  */
-class DateInput : LinearLayout {
+class DateTimeInput : LinearLayout {
 
-    private val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-    private lateinit var textView: TextView
+    private val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy h:mma")
+    private lateinit var textView: EditText
 
     var fragmentManager: FragmentManager? = null
-    var date: LocalDate? = LocalDate.now()
+    var date: LocalDateTime? = LocalDateTime.now()
         set(newDate) {
-            textView.text = if (newDate == null) "" else formatter.format(newDate)
+            textView.setText(if (newDate == null) "" else formatter.format(newDate))
             field = newDate
         }
 
@@ -53,12 +52,12 @@ class DateInput : LinearLayout {
      * Date picker dialog fragment.
      */
     class DatePickerFragment(
-        val date: LocalDate?,
+        val date: LocalDateTime?,
         val handleDataSet: ((year: Int, month: Int, days: Int) -> Unit)
     ) : DialogFragment(), DatePickerDialog.OnDateSetListener {
 
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-            val selectedDate = date ?: LocalDate.now()
+            val selectedDate = date ?: LocalDateTime.now()
             return DatePickerDialog(
                 context!!,
                 this,
@@ -70,6 +69,30 @@ class DateInput : LinearLayout {
 
         override fun onDateSet(view: DatePicker, year: Int, month: Int, day: Int) {
             handleDataSet(year, month + 1, day)
+        }
+    }
+
+    /**
+     * Time picker dialog fragment.
+     */
+    class TimePickerFragment(
+        val date: LocalDateTime?,
+        val handleDataSet: ((hourOfDay: Int, minute: Int) -> Unit)
+    ) : DialogFragment(), TimePickerDialog.OnTimeSetListener {
+
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+            val selectedDate = date ?: LocalDateTime.now()
+            return TimePickerDialog(
+                context!!,
+                this,
+                selectedDate.hour,
+                selectedDate.minute,
+                false
+            )
+        }
+
+        override fun onTimeSet(view: TimePicker?, hourOfDay: Int, minute: Int) {
+            handleDataSet(hourOfDay, minute)
         }
     }
 
@@ -108,7 +131,14 @@ class DateInput : LinearLayout {
             )
         )
 
-        textView = TextView(context)
+        textView = EditText(context)
+        textView.isClickable = false
+        textView.setOnClickListener(onDateInputClicked)
+        textView.maxLines = 1
+        textView.inputType = InputType.TYPE_CLASS_TEXT
+        textView.isFocusable = false
+        textView.clearFocus()
+        textView.setBackgroundResource(0)
         textView.layoutParams = LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -117,7 +147,7 @@ class DateInput : LinearLayout {
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14F)
 
         if (date != null) {
-            textView.text = formatter.format(date!!)
+            textView.setText(formatter.format(date!!))
         }
 
         addView(textView)
@@ -131,7 +161,9 @@ class DateInput : LinearLayout {
     private val onDateInputClicked = OnClickListener {
         if (fragmentManager != null) {
             DatePickerFragment(date) { year: Int, month: Int, day: Int ->
-                date = LocalDate.of(year, month, day)
+                TimePickerFragment(date) { hour, minute ->
+                    date = LocalDateTime.of(year, month, day, hour, minute)
+                }.show(fragmentManager!!, "TimeInput")
             }.show(fragmentManager!!, "DateInput")
         }
     }

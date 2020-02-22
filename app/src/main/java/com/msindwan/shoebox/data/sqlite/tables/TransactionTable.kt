@@ -21,9 +21,10 @@ import com.msindwan.shoebox.data.entities.*
 import com.msindwan.shoebox.data.entities.Currency
 import com.msindwan.shoebox.data.sqlite.SQLiteDatabaseHelper
 import com.msindwan.shoebox.helpers.UUIDHelpers
-import java.util.*
 import org.threeten.bp.Instant
-import org.threeten.bp.LocalDate
+import org.threeten.bp.OffsetDateTime
+import org.threeten.bp.ZoneId
+import java.util.*
 
 
 /**
@@ -34,23 +35,27 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
     companion object {
         private const val TABLE_NAME = "payment_transaction"
         private const val COL_TRANSACTION_ID = "transaction_id"
-        private const val COL_DATE = "date"
+        private const val COL_LOCAL_TIMESTAMP = "local_timestamp"
+        private const val COL_UTC_TIMESTAMP = "utc_timestamp"
+        private const val COL_TIMEZONE = "timezone"
         private const val COL_TITLE = "title"
         private const val COL_CATEGORY = "category"
         private const val COL_AMOUNT = "amount"
         private const val COL_CURRENCY = "currency"
-        private const val COL_DATE_CREATED = "date_created"
+        private const val COL_TIME_CREATED = "time_created"
 
         fun createTableQuery(): String {
             return """
                 CREATE TABLE $TABLE_NAME (
                     $COL_TRANSACTION_ID BLOB NOT NULL PRIMARY KEY,
-                    $COL_DATE INTEGER NOT NULL, 
+                    $COL_LOCAL_TIMESTAMP TEXT NOT NULL, 
+                    $COL_UTC_TIMESTAMP INTEGER NOT NULL,
+                    $COL_TIMEZONE TEXT NOT NULL,
                     $COL_TITLE TEXT,
                     $COL_CATEGORY TEXT NOT NULL,
                     $COL_AMOUNT INTEGER NOT NULL,
                     $COL_CURRENCY TEXT NOT NULL default 'USD',
-                    $COL_DATE_CREATED INTEGER NOT NULL
+                    $COL_TIME_CREATED INTEGER NOT NULL 
                 )
             """
                 .trimIndent()
@@ -58,7 +63,8 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
     }
 
     override fun insertTransaction(
-        date: LocalDate,
+        date: OffsetDateTime,
+        zoneId: ZoneId,
         title: String,
         category: String,
         amount: Long,
@@ -66,19 +72,21 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
     ): Transaction {
         val db = dbHelper.writableDatabase
         val uuid = UUIDHelpers.getBytesFromUUID(UUID.randomUUID())
-        val dateCreated = Instant.now()
+        val now = Instant.now()
 
         val values = ContentValues()
         values.put(COL_TRANSACTION_ID, uuid)
-        values.put(COL_DATE, date.toEpochDay())
+        values.put(COL_LOCAL_TIMESTAMP, date.toString())
+        values.put(COL_UTC_TIMESTAMP, date.toEpochSecond())
+        values.put(COL_TIMEZONE, zoneId.id)
         values.put(COL_TITLE, title)
         values.put(COL_AMOUNT, amount)
         values.put(COL_CATEGORY, category)
         values.put(COL_CURRENCY, currency.code)
-        values.put(COL_DATE_CREATED, dateCreated.toEpochMilli())
+        values.put(COL_TIME_CREATED, now.toEpochMilli())
 
         db.insert(TABLE_NAME, null, values)
-        return Transaction(uuid, date, title, category, amount, currency, dateCreated)
+        return Transaction(uuid, date, zoneId, title, category, amount, currency, now)
     }
 
     override fun deleteTransactions(transactions: List<Transaction>) {
@@ -95,7 +103,6 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
 
     override fun getTransactions(
         searchFilters: SearchFilters,
-        lastCreatedDate: Instant?,
         order: TransactionDAO.Companion.Order,
         limit: Int
     ): MutableList<Transaction> {
@@ -105,17 +112,13 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
         val selection: MutableList<String> = mutableListOf()
         val selectionArgs: MutableList<String> = mutableListOf()
 
-        if (lastCreatedDate != null) {
-            selection.add("$COL_DATE_CREATED <= ?")
-            selectionArgs.add(lastCreatedDate.toEpochMilli().toString())
-        }
         if (searchFilters.dateRange.startDate != null) {
-            selection.add("$COL_DATE >= ?")
-            selectionArgs.add(searchFilters.dateRange.startDate!!.toEpochDay().toString())
+            selection.add("$COL_UTC_TIMESTAMP >= ?")
+            selectionArgs.add(searchFilters.dateRange.startDate!!.toEpochSecond().toString())
         }
         if (searchFilters.dateRange.endDate != null) {
-            selection.add("$COL_DATE <= ?")
-            selectionArgs.add(searchFilters.dateRange.endDate!!.toEpochDay().toString())
+            selection.add("$COL_UTC_TIMESTAMP <= ?")
+            selectionArgs.add(searchFilters.dateRange.endDate!!.toEpochSecond().toString())
         }
         if (searchFilters.title != null) {
             selection.add("$COL_TITLE LIKE ?")
@@ -138,18 +141,20 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
             TABLE_NAME,
             arrayOf(
                 COL_TRANSACTION_ID,
-                COL_DATE,
+                COL_LOCAL_TIMESTAMP,
+                COL_UTC_TIMESTAMP,
+                COL_TIMEZONE,
                 COL_TITLE,
                 COL_CATEGORY,
                 COL_AMOUNT,
                 COL_CURRENCY,
-                COL_DATE_CREATED
+                COL_TIME_CREATED
             ),
             selection.joinToString(" AND "),
             selectionArgs.toTypedArray(),
             null,
             null,
-            "$COL_DATE ${order.value}, $COL_DATE_CREATED ${order.value}",
+            "$COL_UTC_TIMESTAMP, $COL_TIME_CREATED ${order.value}",
             limit.toString()
         )
 
@@ -158,8 +163,19 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
                 transactions.add(
                     Transaction(
                         cTransactions.getBlob(cTransactions.getColumnIndex(COL_TRANSACTION_ID)),
-                        LocalDate.ofEpochDay(
-                            cTransactions.getLong(cTransactions.getColumnIndex(COL_DATE))
+                        OffsetDateTime.parse(
+                            cTransactions.getString(
+                                cTransactions.getColumnIndex(
+                                    COL_LOCAL_TIMESTAMP
+                                )
+                            )
+                        ),
+                        ZoneId.of(
+                            cTransactions.getString(
+                                cTransactions.getColumnIndex(
+                                    COL_TIMEZONE
+                                )
+                            )
                         ),
                         cTransactions.getString(cTransactions.getColumnIndex(COL_TITLE)),
                         cTransactions.getString(cTransactions.getColumnIndex(COL_CATEGORY)),
@@ -172,7 +188,11 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
                             )
                         ),
                         Instant.ofEpochMilli(
-                            cTransactions.getLong(cTransactions.getColumnIndex(COL_DATE_CREATED))
+                            cTransactions.getLong(
+                                cTransactions.getColumnIndex(
+                                    COL_TIME_CREATED
+                                )
+                            )
                         )
                     )
                 )
@@ -184,14 +204,14 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
     }
 
     override fun getSumOfTransactions(
-        dateRange: LocalDateRange,
+        dateRange: OffsetDateTimeRange,
         groupBy: TransactionDAO.Companion.GroupTransactionSums
     ): List<TransactionSum> {
         val db = dbHelper.writableDatabase
         val totals = mutableListOf<TransactionSum>()
 
         val dateFilter = if (dateRange.startDate == null || dateRange.endDate == null) {
-            LocalDateRange.currentMonth()
+            OffsetDateTimeRange.currentMonth()
         } else {
             dateRange
         }
@@ -206,19 +226,19 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
             """
                 SELECT
                     SUM($COL_AMOUNT) as Total,
-                    strftime('%Y', datetime($COL_DATE * 86400, 'unixepoch', 'localtime')) as Year,
-                    strftime('%m', datetime($COL_DATE * 86400, 'unixepoch', 'localtime')) as Month
+                    strftime('%Y', datetime($COL_UTC_TIMESTAMP, 'localtime')) as Year,
+                    strftime('%m', datetime($COL_UTC_TIMESTAMP, 'localtime')) as Month
                 FROM
                     $TABLE_NAME
                 WHERE 
-                    $COL_DATE >= ? AND $COL_DATE <= ?
+                    $COL_UTC_TIMESTAMP >= ? AND $COL_UTC_TIMESTAMP <= ?
                 $groupByClause
                 ORDER BY
-                    $COL_DATE ASC
+                    $COL_UTC_TIMESTAMP ASC
             """.trimIndent(),
             arrayOf(
-                dateFilter.startDate!!.toEpochDay().toString(),
-                dateRange.endDate!!.toEpochDay().toString()
+                dateFilter.startDate!!.toEpochSecond().toString(),
+                dateFilter.endDate!!.toEpochSecond().toString()
             )
         )
 

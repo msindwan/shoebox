@@ -146,12 +146,13 @@
                         android:textSize="16sp"
                         app:fontFamily="@font/staatliches_font_family" />
 
-                    <com.msindwan.shoebox.widgets.DateInput
+                    <com.msindwan.shoebox.widgets.DateTimeInput
                         android:id="@+id/dashboard_transactions_txt_from"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@drawable/input_background"
-                        android:padding="10dp" />
+                        android:paddingRight="10dp"
+                        android:paddingLeft="10dp" />
 
                     <TextView
                         android:id="@+id/dashboard_transactions_filter_no_start_date"
@@ -186,12 +187,13 @@
                         android:textSize="16sp"
                         app:fontFamily="@font/staatliches_font_family" />
 
-                    <com.msindwan.shoebox.widgets.DateInput
+                    <com.msindwan.shoebox.widgets.DateTimeInput
                         android:id="@+id/dashboard_transactions_txt_to"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@drawable/input_background"
-                        android:padding="10dp" />
+                        android:paddingRight="10dp"
+                        android:paddingLeft="10dp" />
 
                     <TextView
                         android:id="@+id/dashboard_transactions_filter_no_end_date"

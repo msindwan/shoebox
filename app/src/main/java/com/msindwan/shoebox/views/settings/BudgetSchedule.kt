@@ -153,7 +153,7 @@ class BudgetSchedule : AppCompatActivity() {
             ciCurrentBudget?.editText?.text?.clear()
         }
 
-        if (year < now.year || month < now.monthValue) {
+        if (year < now.year || (year == now.year && month < now.monthValue)) {
             btnUpdateBudget?.isEnabled = false
             ciCurrentBudget?.isEnabled = false
             spnRepeatBudget?.isEnabled = false

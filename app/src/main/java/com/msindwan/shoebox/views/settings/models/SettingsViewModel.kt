@@ -21,7 +21,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.msindwan.shoebox.data.DataAccessLayer
 import com.msindwan.shoebox.data.entities.Budget
-import com.msindwan.shoebox.data.entities.LocalDateRange
+import com.msindwan.shoebox.data.entities.OffsetDateTimeRange
 import org.threeten.bp.LocalDate
 
 
@@ -98,11 +98,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
      * the selected year.
      */
     private fun loadMonthlyBudgets(): List<Budget?> {
-        return dal.budgetDAO.getBudgets(
-            LocalDateRange(
-                LocalDate.of(budgetScheduleYear.value!!, 1, 1),
-                LocalDate.of(budgetScheduleYear.value!!, 12, 31)
-            )
-        )
+        return dal.budgetDAO.getBudgets(OffsetDateTimeRange.year(budgetScheduleYear.value!!))
     }
 }

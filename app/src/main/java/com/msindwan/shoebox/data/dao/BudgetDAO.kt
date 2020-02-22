@@ -18,7 +18,7 @@ package com.msindwan.shoebox.data.dao
 import com.msindwan.shoebox.data.entities.Budget
 import com.msindwan.shoebox.data.entities.Currency
 import com.msindwan.shoebox.data.entities.Interval
-import com.msindwan.shoebox.data.entities.LocalDateRange
+import com.msindwan.shoebox.data.entities.OffsetDateTimeRange
 
 
 /**
@@ -47,11 +47,11 @@ interface BudgetDAO {
     /**
      * Returns the budgets applicable for the given date range.
      *
-     * @param dateRange {LocalDateRange} The date range to find budgets for.
+     * @param dateRange {OffsetDateTimeRange} The date range to find budgets for.
      * @param groupBy {GroupBudgets} The way to group budgets together.
      */
     fun getBudgets(
-        dateRange: LocalDateRange,
+        dateRange: OffsetDateTimeRange,
         groupBy: GroupBudgets = GroupBudgets.MONTH
     ): List<Budget?>
 }
