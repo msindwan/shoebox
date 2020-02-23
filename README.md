@@ -41,8 +41,8 @@ fast, easy to use, and simple to get started with!
         </td>
         <td>
             Get a complete view of all of your spending habits over the past few months or years.
-            You can view your total budget over the past few months or years to view your overall
-            progress and the amount that you've saved over time.
+            You can view your total budget for the specified period and the amount that you've 
+            saved over time.
         </td>
     </tr>
 </table
