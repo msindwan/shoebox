@@ -40,7 +40,7 @@ import java.util.*
 /**
  * Fragment for the dashboard home view
  */
-class DashboardHome : Fragment() {
+class DashboardHomeFragment : Fragment() {
 
     private lateinit var dashboardModel: DashboardViewModel
 

@@ -39,12 +39,12 @@ import org.threeten.bp.format.DateTimeFormatter
 class DateTimeInput : LinearLayout {
 
     private val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy h:mma")
-    private lateinit var textView: EditText
+    private lateinit var editText: EditText
 
     var fragmentManager: FragmentManager? = null
     var date: LocalDateTime? = LocalDateTime.now()
         set(newDate) {
-            textView.setText(if (newDate == null) "" else formatter.format(newDate))
+            editText.setText(if (newDate == null) "" else formatter.format(newDate))
             field = newDate
         }
 
@@ -131,26 +131,26 @@ class DateTimeInput : LinearLayout {
             )
         )
 
-        textView = EditText(context)
-        textView.isClickable = false
-        textView.setOnClickListener(onDateInputClicked)
-        textView.maxLines = 1
-        textView.inputType = InputType.TYPE_CLASS_TEXT
-        textView.isFocusable = false
-        textView.clearFocus()
-        textView.setBackgroundResource(0)
-        textView.layoutParams = LayoutParams(
+        editText = EditText(context)
+        editText.isClickable = false
+        editText.setOnClickListener(onDateInputClicked)
+        editText.maxLines = 1
+        editText.inputType = InputType.TYPE_CLASS_TEXT
+        editText.isFocusable = false
+        editText.clearFocus()
+        editText.setBackgroundResource(0)
+        editText.layoutParams = LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT,
             1.0F
         )
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14F)
+        editText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14F)
 
         if (date != null) {
-            textView.setText(formatter.format(date!!))
+            editText.setText(formatter.format(date!!))
         }
 
-        addView(textView)
+        addView(editText)
         addView(imageView)
         setOnClickListener(onDateInputClicked)
     }

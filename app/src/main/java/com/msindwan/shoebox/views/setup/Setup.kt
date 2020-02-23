@@ -27,7 +27,6 @@ import com.msindwan.shoebox.data.entities.Currency
 import com.msindwan.shoebox.data.entities.Interval
 import com.msindwan.shoebox.views.dashboard.Dashboard
 import com.msindwan.shoebox.widgets.CurrencyInput
-import org.threeten.bp.LocalDate
 
 
 /**
@@ -68,13 +67,12 @@ class Setup : AppCompatActivity() {
             txtBudget?.editText?.error = resources.getString(R.string.budget_validation)
             btnNext?.isEnabled = true
         } else {
-            val now: LocalDate = LocalDate.now()
             val dal: DataAccessLayer = DataAccessLayer.getInstance(applicationContext)
 
             // Create the initial monthly budget and start the dashboard.
             dal.budgetDAO.upsertBudget(
-                now.monthValue,
-                now.year,
+                1,
+                1900,
                 Interval.M,
                 budget,
                 Currency.USD

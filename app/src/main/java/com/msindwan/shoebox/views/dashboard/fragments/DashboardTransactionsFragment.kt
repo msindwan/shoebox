@@ -30,7 +30,7 @@ import android.util.DisplayMetrics
 import android.widget.*
 import androidx.core.view.ViewCompat
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.msindwan.shoebox.data.entities.SearchFilters
 import com.msindwan.shoebox.views.dashboard.components.TransactionFilterPanel
 
@@ -75,14 +75,14 @@ class DashboardTransactionsFragment : Fragment() {
         val height = displayMetrics.heightPixels
 
         transactionFilters?.y = -height.toFloat()
-        transactionFilters?.setFragmentManager(fragmentManager)
+        transactionFilters?.setFragmentManager(parentFragmentManager)
         ViewCompat.setElevation(transactionFilters!!, 15.0F)
 
         transactionSearch?.setOnClickListener(onSearchOrFilterClicked)
         transactionList?.setViewMoreClickListener(onViewMoreTransactionsClicked)
         transactionList?.setOnDeleteTransactions { dashboardModel.deleteTransactions(it) }
 
-        dashboardModel = ViewModelProviders.of(activity!!).get(DashboardViewModel::class.java)
+        dashboardModel = ViewModelProvider(activity!!).get(DashboardViewModel::class.java)
         dashboardModel.getSearchTransactions().observe(viewLifecycleOwner, Observer { update() })
 
         val searchFilters = dashboardModel.getSearchTransactionsFilters()

@@ -50,6 +50,9 @@
     <string name="repeat">Repeat</string>
     <string name="update">Update</string>
     <string name="add">Add</string>
+    <string name="n_over_budget">%s over budget</string>
+    <string name="n_budget_remaining">%s remaining</string>
+    <string name="from_date_range">From %s - %s</string>
     <plurals name="applied_filters">
         <item quantity="one">%d filter applied</item>
         <item quantity="other">%d filters applied</item>

@@ -120,8 +120,8 @@ class BudgetGraph : View {
             }
 
             for (i in data!!.indices) {
-                val x1 = yAxisWidth.toFloat() + (xSpace / 4)
-                val x2 = yAxisWidth.toFloat() + xSpace - (xSpace / 4)
+                val x1 = yAxisWidth.toFloat() + (xSpace / 4) + (xSpace * i)
+                val x2 = yAxisWidth.toFloat() + xSpace - (xSpace / 4) + (xSpace * i)
                 val y1 = graphHeight - (graphHeight * (data!![i].amount / yMax)) + graphTop
 
                 if (data!![i].budget < data!![i].amount) {
@@ -179,7 +179,7 @@ class BudgetGraph : View {
                 canvas?.restore()
             }
 
-            //budgetChartPath.reset()
+            budgetChartPath.reset()
             for (i in 1..data!!.size) {
                 val x = yAxisWidth + xSpace * i - (xSpace / 2)
                 val y = graphHeight - (graphHeight * (data!![i - 1].budget / yMax)) + graphTop

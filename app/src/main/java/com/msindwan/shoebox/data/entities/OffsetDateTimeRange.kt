@@ -69,30 +69,16 @@ data class OffsetDateTimeRange(
     }
 
     /**
-     * Subtracts from the end date.
+     * Subtracts from the start date.
      *
      * @param amountToRemove {Long} The temporal amount to subtract.
      * @param unit {ChronoUnit} The unit of the amount.
-     * @returns A new date range with the updated end date.
+     * @returns A new date range with the updated start date.
      */
-    fun minusEnd(amountToRemove: Long, unit: ChronoUnit): OffsetDateTimeRange {
+    fun minusStart(amountToRemove: Long, unit: ChronoUnit): OffsetDateTimeRange {
         return OffsetDateTimeRange(
-            startDate,
-            endDate?.minus(amountToRemove, unit)
-        )
-    }
-
-    /**
-     * Adds to the end date.
-     *
-     * @param amountToAdd {Long} The temporal amount to add.
-     * @param unit {ChronoUnit} The unit of the amount.
-     * @returns A new date range with the updated end date.
-     */
-    fun plusEnd(amountToAdd: Long, unit: ChronoUnit): OffsetDateTimeRange {
-        return OffsetDateTimeRange(
-            startDate,
-            endDate?.plus(amountToAdd, unit)
+            startDate?.minus(amountToRemove, unit),
+            endDate
         )
     }
 }

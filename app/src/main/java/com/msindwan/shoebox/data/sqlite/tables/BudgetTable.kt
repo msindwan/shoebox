@@ -125,25 +125,33 @@ class BudgetTable(private val dbHelper: SQLiteDatabaseHelper) : BudgetDAO {
         // Group budgets by date.
         // NOTE: Currently this is done in memory. I'd like to investigate the LOE for implementing
         // a more SQL-oriented solution.
-        val groupedBudgets: MutableList<Budget?> = mutableListOf()
+        val groupedBudgets = arrayOfNulls<Budget?>(
+            if (groupBy == BudgetDAO.Companion.GroupBudgets.MONTH) {
+                dateRange.months.toInt()
+            } else {
+                dateRange.years.toInt()
+            }
+        )
 
         for (i in 0 until dateRange.months) {
             val month = dateRange.startDate.plus(i, ChronoUnit.MONTHS)
             val budget = budgets.find { b -> b.isApplicableToDate(month) }?.copyForDate(month)
-
             if (groupBy == BudgetDAO.Companion.GroupBudgets.MONTH) {
-                groupedBudgets.add(budget)
+                groupedBudgets[i.toInt()] = budget
             } else {
-                if (groupedBudgets.lastOrNull()?.year != month.year) {
-                    groupedBudgets.add(budget)
-                } else {
-                    groupedBudgets.last()!!.amount += budget?.amount ?: 0
-                    groupedBudgets.last()!!.interval = Interval.N
+                val yearIndex = month.year - dateRange.startDate.year
+                if (yearIndex < groupedBudgets.size) {
+                    if (groupedBudgets.getOrNull(yearIndex) != null) {
+                        groupedBudgets[yearIndex]!!.amount += budget?.amount ?: 0
+                        groupedBudgets[yearIndex]!!.interval = Interval.N
+                    } else {
+                        groupedBudgets[yearIndex] = budget
+                    }
                 }
             }
         }
 
-        return groupedBudgets
+        return groupedBudgets.toList()
     }
 
     override fun upsertBudget(

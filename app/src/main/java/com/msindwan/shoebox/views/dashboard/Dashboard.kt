@@ -34,7 +34,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.msindwan.shoebox.data.entities.Interval
 import com.msindwan.shoebox.helpers.ActivityHelpers
 import com.msindwan.shoebox.views.dashboard.components.FooterMenu
-import com.msindwan.shoebox.views.dashboard.fragments.DashboardHome
+import com.msindwan.shoebox.views.dashboard.fragments.DashboardHomeFragment
 import com.msindwan.shoebox.views.dashboard.fragments.DashboardTransactionsFragment
 import com.msindwan.shoebox.views.dashboard.fragments.DashboardTrendsFragment
 import com.msindwan.shoebox.views.dashboard.models.DashboardViewModel
@@ -72,7 +72,7 @@ class Dashboard : AppCompatActivity() {
             return when (position) {
                 FooterMenu.MenuItem.TRANSACTIONS.value -> DashboardTransactionsFragment()
                 FooterMenu.MenuItem.TRENDS.value -> DashboardTrendsFragment()
-                else -> DashboardHome()
+                else -> DashboardHomeFragment()
             }
         }
     }

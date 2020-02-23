@@ -154,7 +154,7 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
             selectionArgs.toTypedArray(),
             null,
             null,
-            "$COL_UTC_TIMESTAMP, $COL_TIME_CREATED ${order.value}",
+            "$COL_UTC_TIMESTAMP ${order.value}, $COL_TIME_CREATED ${order.value}",
             limit.toString()
         )
 
@@ -226,8 +226,8 @@ class TransactionTable(private val dbHelper: SQLiteDatabaseHelper) : Transaction
             """
                 SELECT
                     SUM($COL_AMOUNT) as Total,
-                    strftime('%Y', datetime($COL_UTC_TIMESTAMP, 'localtime')) as Year,
-                    strftime('%m', datetime($COL_UTC_TIMESTAMP, 'localtime')) as Month
+                    strftime('%Y', datetime($COL_UTC_TIMESTAMP, 'unixepoch', 'localtime')) as Year,
+                    strftime('%m', datetime($COL_UTC_TIMESTAMP, 'unixepoch', 'localtime')) as Month
                 FROM
                     $TABLE_NAME
                 WHERE 

@@ -35,7 +35,8 @@ data class Budget(
     fun isApplicableToDate(date: OffsetDateTime): Boolean {
         val matchesExactDate = month == date.monthValue && year == date.year
         val matchesYear = month == date.monthValue && interval == Interval.Y
-        val matchesMonth = (date.monthValue > month || date.year > year) && interval == Interval.M
+        val matchesMonth =
+            ((date.monthValue >= month && date.year == year) || date.year > year) && interval == Interval.M
 
         return matchesExactDate || matchesYear || matchesMonth
     }

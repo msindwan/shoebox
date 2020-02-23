@@ -54,17 +54,19 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val currentMenuItem: MutableLiveData<FooterMenu.MenuItem> =
         MutableLiveData(FooterMenu.MenuItem.HOME)
 
-    private val budgetGraph: MutableLiveData<List<BudgetGraph.Point>> by lazy {
+    private val trendsBudgetGraph: MutableLiveData<List<BudgetGraph.Point>> by lazy {
         MutableLiveData(loadBudgetGraph())
     }
 
     private var trendsDateRange: MutableLiveData<OffsetDateTimeRange> =
-        MutableLiveData(OffsetDateTimeRange.currentYear().minusEnd(4, ChronoUnit.MONTHS))
+        MutableLiveData(OffsetDateTimeRange.currentMonth().minusStart(7, ChronoUnit.MONTHS))
 
-    private var recentTransactionsDateRange: OffsetDateTimeRange = OffsetDateTimeRange.currentMonth()
+    private var recentTransactionsDateRange: OffsetDateTimeRange =
+        OffsetDateTimeRange.currentMonth()
 
     private var searchOrder: TransactionDAO.Companion.Order =
         TransactionDAO.Companion.Order.DATE_DESC
+
     private var searchFilters: SearchFilters =
         SearchFilters(null, OffsetDateTimeRange(null, null), null, null, null)
 
@@ -122,7 +124,13 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
      * @param category {String} The category of the transaction.
      * @param amount {Long} The amount of the transaction.
      */
-    fun insertTransaction(date: OffsetDateTime, zoneId: ZoneId, title: String, category: String, amount: Long) {
+    fun insertTransaction(
+        date: OffsetDateTime,
+        zoneId: ZoneId,
+        title: String,
+        category: String,
+        amount: Long
+    ) {
         dal.transactionDAO.insertTransaction(date, zoneId, title, category, amount, Currency.USD)
         updateRecentTransactions()
         updateSearchTransactions()
@@ -227,43 +235,83 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    /**
+     * Returns current search transaction filters.
+     *
+     * @returns {SearchFilters} The current filters set.
+     */
     fun getSearchTransactionsFilters(): SearchFilters {
         return searchFilters.copy()
     }
 
-    fun getBudgetGraph(): LiveData<List<BudgetGraph.Point>> {
-        return budgetGraph
+    /**
+     * Returns the data points for the trends budget graph.
+     *
+     * @return {LiveData} The points for the graph.
+     */
+    fun getTrendsBudgetGraph(): LiveData<List<BudgetGraph.Point>> {
+        return trendsBudgetGraph
     }
 
+    /**
+     * Returns the date range for trends.
+     *
+     * @return {LiveData} The points for the graph.
+     */
     fun getTrendsDateRange(): LiveData<OffsetDateTimeRange> {
         return trendsDateRange
     }
 
+    /**
+     * Sets the date range for trends and updates relevant subscribers.
+     *
+     * @param dateRange {OffsetDateTime} The updated trends date range.
+     */
     fun setTrendsDateRange(dateRange: OffsetDateTimeRange) {
         trendsDateRange.value = dateRange
         updateTrends()
     }
 
+    /**
+     * Refreshes the current budget.
+     */
     private fun updateBudget() {
         currentBudget.value = loadBudget()
     }
 
+    /**
+     * Refreshes the recent transactions.
+     */
     private fun updateRecentTransactions() {
         recentTransactions.value = loadRecentTransactions()
     }
 
+    /**
+     * Refreshes the search transactions.
+     */
     private fun updateSearchTransactions() {
         searchTransactions.value = loadSearchTransactions()
     }
 
+    /**
+     * Refreshes the sum of transactions.
+     */
     private fun updateSumOfTransactions() {
         sumOfRecentTransactions.value = loadSumOfTransactions()
     }
 
+    /**
+     * Refreshes the trends budget graph.
+     */
     private fun updateTrends() {
-        budgetGraph.value = loadBudgetGraph()
+        trendsBudgetGraph.value = loadBudgetGraph()
     }
 
+    /**
+     * Fetches recent transactions by date range.
+     *
+     * @returns {List<Transaction>} A list of recent transactions.
+     */
     private fun loadRecentTransactions(): List<Transaction> {
         val filters = SearchFilters(null, recentTransactionsDateRange, null, null, null)
         return dal.transactionDAO.getTransactions(
@@ -273,6 +321,11 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         )
     }
 
+    /**
+     * Fetches search transactions by filters.
+     *
+     * @returns {List<Transaction>} A list of transactions matching the search criteria.
+     */
     private fun loadSearchTransactions(): List<Transaction> {
         return dal.transactionDAO.getTransactions(
             searchFilters,
@@ -281,65 +334,78 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         )
     }
 
+    /**
+     * Fetches the budget for the current date range.
+     *
+     * @returns {Budget?} The budget for the current date range.
+     */
     private fun loadBudget(): Budget? {
         return dal.budgetDAO.getBudgets(recentTransactionsDateRange).getOrNull(0)
     }
 
+    /**
+     * Fetches the sum of transactions for the current date range.
+     *
+     * @returns {Long} The sum of transactions.
+     */
     private fun loadSumOfTransactions(): Long {
         val sums = dal.transactionDAO.getSumOfTransactions(recentTransactionsDateRange)
-        if (sums.isNotEmpty()) {
-            return sums[0].amount
-        }
-        return 0
+        return sums.getOrNull(0)?.amount ?: 0
     }
 
+    /**
+     * Loads the budget graph for the trends date range.
+     *
+     * @returns {List<BudgetGraph.Point>} The list of points.
+     */
     private fun loadBudgetGraph(): List<BudgetGraph.Point> {
         val groupTxnSumsBy: TransactionDAO.Companion.GroupTransactionSums
         val groupBudgetsBy: BudgetDAO.Companion.GroupBudgets
+        val monthFormatter = DateTimeFormatter.ofPattern("MMM YYYY")
+        val points = mutableListOf<BudgetGraph.Point>()
+        val xTicks: Long
 
+        // Get budget graph attributes based on date range.
         if (trendsDateRange.value!!.years > 1) {
             groupTxnSumsBy = TransactionDAO.Companion.GroupTransactionSums.YEAR
             groupBudgetsBy = BudgetDAO.Companion.GroupBudgets.YEAR
+            xTicks = trendsDateRange.value!!.years
         } else {
             groupTxnSumsBy = TransactionDAO.Companion.GroupTransactionSums.MONTH
             groupBudgetsBy = BudgetDAO.Companion.GroupBudgets.MONTH
+            xTicks = trendsDateRange.value!!.months
         }
 
+        // Fetch budgets and transactions for the date range grouped by month or year.
         val budgets = dal.budgetDAO.getBudgets(trendsDateRange.value!!, groupBudgetsBy)
         val transactions =
             dal.transactionDAO.getSumOfTransactions(trendsDateRange.value!!, groupTxnSumsBy)
 
-        val points = mutableListOf<BudgetGraph.Point>()
-
-        for ((i, budget) in budgets.withIndex()) {
-            val x: Long = budget?.amount ?: 0
-            var y: Long = 0
+        for (i in 0 until xTicks) {
+            // Derive budget and transaction per tick.
+            val budget: Budget?
+            val sum: TransactionSum?
             val label: String
 
-            for (transaction in transactions) {
-                if (
-                    groupTxnSumsBy == TransactionDAO.Companion.GroupTransactionSums.MONTH &&
-                    transaction.month == trendsDateRange.value!!.startDate!!.monthValue + i
-                ) {
-                    y = transaction.amount
-                } else if (
-                    groupTxnSumsBy == TransactionDAO.Companion.GroupTransactionSums.YEAR &&
-                    transaction.year == trendsDateRange.value!!.startDate!!.year + i
-                ) {
-                    y = transaction.amount
+            if (groupBudgetsBy == BudgetDAO.Companion.GroupBudgets.YEAR) {
+                budget = budgets.filterNotNull().find { b ->
+                    b.year == trendsDateRange.value!!.startDate?.year?.plus(i.toInt())
                 }
-            }
-
-            label = if (groupTxnSumsBy == TransactionDAO.Companion.GroupTransactionSums.MONTH) {
-                val monthF = DateTimeFormatter.ofPattern("MMM YYYY")
-                trendsDateRange.value!!.startDate!!.plusMonths(i.toLong()).format(monthF)
+                sum = transactions.find { t -> t.year == budget?.year }
+                label = trendsDateRange.value!!.startDate!!.year.plus(i).toString()
             } else {
-                (trendsDateRange.value!!.startDate!!.year + i).toString()
+                budget = budgets.filterNotNull().find { b ->
+                    b.year == trendsDateRange.value!!.startDate?.plusMonths(i)?.year &&
+                            b.month == trendsDateRange.value!!.startDate?.plusMonths(i)?.monthValue
+                }
+                sum = transactions.find { t -> t.month == budget?.month && t.year == budget?.year }
+                label = trendsDateRange.value!!.startDate!!.plusMonths(i).format(monthFormatter)
             }
 
-            points.add(BudgetGraph.Point(x, y, label))
+            points.add(BudgetGraph.Point(budget?.amount ?: 0, sum?.amount ?: 0, label))
         }
 
         return points
     }
+
 }

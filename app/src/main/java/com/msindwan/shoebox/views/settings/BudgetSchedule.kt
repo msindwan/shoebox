@@ -61,7 +61,7 @@ class BudgetSchedule : AppCompatActivity() {
     private lateinit var settingsModel: SettingsViewModel
 
     companion object {
-        private const val NUM_PAGES = 200
+        private const val NUM_PAGES = 101
     }
 
     /**
@@ -143,8 +143,8 @@ class BudgetSchedule : AppCompatActivity() {
         val budgets = settingsModel.getMonthlyBudgets().value
 
         ysCalendarYear?.value = year
-        ysCalendarYear?.maxValue = now.year + 100
-        ysCalendarYear?.minValue = now.year - 100
+        ysCalendarYear?.maxValue = now.year + NUM_PAGES/2
+        ysCalendarYear?.minValue = now.year - NUM_PAGES/2
 
         val budget = budgets?.get(month - 1)
         if (budget != null) {

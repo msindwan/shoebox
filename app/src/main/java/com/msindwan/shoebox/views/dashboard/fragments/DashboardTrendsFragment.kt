@@ -24,7 +24,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.msindwan.shoebox.R
 import com.msindwan.shoebox.data.entities.OffsetDateTimeRange
 import com.msindwan.shoebox.views.dashboard.models.DashboardViewModel
@@ -42,7 +42,6 @@ import java.util.*
 class DashboardTrendsFragment : Fragment() {
 
     private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
-    private val monthF = DateTimeFormatter.ofPattern("MMM yyyy")
     private var selectedView: ButtonToggleGroup? = null
     private var remainingBudgetTxt: TextView? = null
     private var dateRangeTxt: TextView? = null
@@ -63,8 +62,11 @@ class DashboardTrendsFragment : Fragment() {
         setup(view)
     }
 
+    /**
+     * Initializes the view.
+     */
     private fun setup(view: View) {
-        dashboardModel = ViewModelProviders.of(activity!!).get(DashboardViewModel::class.java)
+        dashboardModel = ViewModelProvider(activity!!).get(DashboardViewModel::class.java)
         budgetGraph = view.findViewById(R.id.budget_graph)
         remainingBudgetTxt = view.findViewById(R.id.dashboard_trends_remaining_budget)
         dateRangeTxt = view.findViewById(R.id.dashboard_trends_range)
@@ -74,15 +76,21 @@ class DashboardTrendsFragment : Fragment() {
         selectedView?.addButton("Yearly", "Yearly")
         selectedView?.onButtonClickedListener = onDateRangeChanged
 
-        dashboardModel.getBudgetGraph().observe(viewLifecycleOwner, Observer { update() })
+        dashboardModel.getTrendsBudgetGraph().observe(viewLifecycleOwner, Observer { update() })
         dashboardModel.getTrendsDateRange().observe(viewLifecycleOwner, Observer { update() })
     }
 
+    /**
+     * Updates the view based on the view model state.
+     */
     private fun update() {
-        budgetGraph?.data = dashboardModel.getBudgetGraph().value
-        val totalBudget = dashboardModel.getBudgetGraph().value!!.sumBy { it.budget.toInt() } / 100F
+        val monthFormatter = DateTimeFormatter.ofPattern("MMM yyyy")
+
+        budgetGraph?.data = dashboardModel.getTrendsBudgetGraph().value
+        val totalBudget =
+            dashboardModel.getTrendsBudgetGraph().value!!.sumBy { it.budget.toInt() } / 100F
         val remainingBudget =
-            totalBudget - dashboardModel.getBudgetGraph().value!!.sumBy { it.amount.toInt() } / 100F
+            totalBudget - dashboardModel.getTrendsBudgetGraph().value!!.sumBy { it.amount.toInt() } / 100F
         val dateRange = dashboardModel.getTrendsDateRange().value!!
 
         if (dateRange.years > 1) {
@@ -92,22 +100,34 @@ class DashboardTrendsFragment : Fragment() {
         }
 
         if (remainingBudget < 0) {
-            remainingBudgetTxt?.text = "${currencyFormatter.format(remainingBudget)} over budget"
+            remainingBudgetTxt?.text = resources.getString(
+                R.string.n_over_budget,
+                currencyFormatter.format(remainingBudget)
+            )
             remainingBudgetTxt?.setTextColor(Color.parseColor("#F0695A"))
         } else {
-            remainingBudgetTxt?.text = "${currencyFormatter.format(remainingBudget)} remaining"
+            remainingBudgetTxt?.text = resources.getString(
+                R.string.n_budget_remaining,
+                currencyFormatter.format(remainingBudget)
+            )
             remainingBudgetTxt?.setTextColor(Color.parseColor("#3CC28D"))
         }
 
-        dateRangeTxt?.text =
-            "From ${monthF.format(dateRange.startDate)} - ${monthF.format(dateRange.endDate)}"
+        dateRangeTxt?.text = resources.getString(
+            R.string.from_date_range,
+            monthFormatter.format(dateRange.startDate),
+            monthFormatter.format(dateRange.endDate)
+        )
     }
 
+    /**
+     * Handles changing the date range for trends.
+     */
     private val onDateRangeChanged = fun(view: View) {
         val dateRange = if (view.tag == "Monthly") {
-            OffsetDateTimeRange.currentYear().minusEnd(4, ChronoUnit.MONTHS)
+            OffsetDateTimeRange.currentMonth().minusStart(7, ChronoUnit.MONTHS)
         } else {
-            OffsetDateTimeRange.currentYear().plusEnd(7, ChronoUnit.YEARS)
+            OffsetDateTimeRange.currentYear().minusStart(7, ChronoUnit.YEARS)
         }
         dashboardModel.setTrendsDateRange(dateRange)
     }
